@@ -1,0 +1,29 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net9.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="AuteurForm.cs" />
+    <Compile Remove="CategorieForm.cs" />
+    <Compile Remove="EmployeForm.cs" />
+    <Compile Remove="EmpruntForm.cs" />
+    <Compile Remove="EmpruntMaterielForm.cs" />
+    <Compile Remove="EvaluationForm.cs" />
+    <Compile Remove="LivreForm.cs" />
+    <Compile Remove="MaterielForm.cs" />
+    <Compile Remove="ParticipationForm.cs" />
+    <Compile Remove="UsagerForm.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Remove="AuteurForm.resx" />
+    <EmbeddedResource Remove="LivreForm.resx" />
+  </ItemGroup>
+
+</Project>
