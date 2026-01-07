@@ -10,14 +10,44 @@ using System.Windows.Forms;
 
 namespace TP3_BD
 {
-    public partial class cmbAuteur : Form
+    public partial class LivreForm1 : Form
     {
-        public cmbAuteur()
+        public LivreForm1()
         {
             InitializeComponent();
         }
 
-        private void LivreForm1_Load(object sender, EventArgs e)
+        private void btnAjouter_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void btnModifier_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void btnSupprimer_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void btnVider_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void btnActualiser_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void btnRechercher_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void btnRetour_Click(object sender, EventArgs e)
         {
 
         }

@@ -33,7 +33,7 @@
             btnCategorie = new Button();
             btnUsager = new Button();
             btnEmprunt = new Button();
-            btnActivité = new Button();       
+            btnActivité = new Button();
             btnParticipation = new Button();
             btnMatériel = new Button();
             btnEmpruntMatériel = new Button();
@@ -169,7 +169,6 @@
             Controls.Add(btnLivre);
             Name = "MenuForm";
             Text = "MenuForm";
-            Load += Form1_Load;
             ResumeLayout(false);
         }
 

@@ -28,12 +28,235 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.components = new System.ComponentModel.Container();
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(800, 450);
-            this.Text = "EmpruntForm1";
+            label2 = new Label();
+            dgvAuteur = new DataGridView();
+            btnRechercher = new Button();
+            btnActualiser = new Button();
+            txtIdEmpruntRetour = new TextBox();
+            lbISBN = new Label();
+            lbListIdEmprunt = new Label();
+            txtListeIdEmprunt = new TextBox();
+            btnSupprimer = new Button();
+            btnRetour = new Button();
+            btnRetourner = new Button();
+            btnAjouter = new Button();
+            cmbUsager = new ComboBox();
+            cmbLivre = new ComboBox();
+            dtpDateEmprunt = new DateTimePicker();
+            dtpRetourPrevu = new DateTimePicker();
+            txtEtat = new TextBox();
+            dtpDateRetourReel = new DateTimePicker();
+            ((System.ComponentModel.ISupportInitialize)dgvAuteur).BeginInit();
+            SuspendLayout();
+            // 
+            // label2
+            // 
+            label2.AutoSize = true;
+            label2.Location = new Point(709, 16);
+            label2.Name = "label2";
+            label2.Size = new Size(0, 15);
+            label2.TabIndex = 178;
+            // 
+            // dgvAuteur
+            // 
+            dgvAuteur.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            dgvAuteur.Location = new Point(8, 288);
+            dgvAuteur.MultiSelect = false;
+            dgvAuteur.Name = "dgvAuteur";
+            dgvAuteur.ReadOnly = true;
+            dgvAuteur.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+            dgvAuteur.Size = new Size(655, 183);
+            dgvAuteur.TabIndex = 168;
+            // 
+            // btnRechercher
+            // 
+            btnRechercher.Location = new Point(172, 234);
+            btnRechercher.Name = "btnRechercher";
+            btnRechercher.Size = new Size(75, 23);
+            btnRechercher.TabIndex = 167;
+            btnRechercher.Text = "Rechercher";
+            btnRechercher.UseVisualStyleBackColor = true;
+            btnRechercher.Click += btnRechercher_Click;
+            // 
+            // btnActualiser
+            // 
+            btnActualiser.Location = new Point(8, 234);
+            btnActualiser.Name = "btnActualiser";
+            btnActualiser.Size = new Size(75, 23);
+            btnActualiser.TabIndex = 166;
+            btnActualiser.Text = "Actualiser";
+            btnActualiser.UseVisualStyleBackColor = true;
+            btnActualiser.Click += btnActualiser_Click;
+            // 
+           
+            // 
+            // txtIdEmpruntRetour
+            // 
+            txtIdEmpruntRetour.Location = new Point(178, 61);
+            txtIdEmpruntRetour.Name = "txtIdEmpruntRetour";
+            txtIdEmpruntRetour.ReadOnly = true;
+            txtIdEmpruntRetour.Size = new Size(100, 23);
+            txtIdEmpruntRetour.TabIndex = 162;
+            // 
+            // lbISBN
+            // 
+            lbISBN.AutoSize = true;
+            lbISBN.Location = new Point(492, 16);
+            lbISBN.Name = "lbISBN";
+            lbISBN.Size = new Size(0, 15);
+            lbISBN.TabIndex = 161;
+            // 
+            // lbListIdEmprunt
+            // 
+            lbListIdEmprunt.AutoSize = true;
+            lbListIdEmprunt.Location = new Point(344, 239);
+            lbListIdEmprunt.Name = "lbListIdEmprunt";
+            lbListIdEmprunt.Size = new Size(63, 15);
+            lbListIdEmprunt.TabIndex = 159;
+            lbListIdEmprunt.Text = "IdEmprunt";
+            // 
+            // txtListeIdEmprunt
+            // 
+            txtListeIdEmprunt.Location = new Point(411, 235);
+            txtListeIdEmprunt.Name = "txtListeIdEmprunt";
+            txtListeIdEmprunt.Size = new Size(100, 23);
+            txtListeIdEmprunt.TabIndex = 158;
+            // 
+            // btnSupprimer
+            // 
+            btnSupprimer.Location = new Point(8, 103);
+            btnSupprimer.Name = "btnSupprimer";
+            btnSupprimer.Size = new Size(75, 23);
+            btnSupprimer.TabIndex = 157;
+            btnSupprimer.Text = "Supprimer";
+            btnSupprimer.UseVisualStyleBackColor = true;
+            btnSupprimer.Click += btnSupprimer_Click;
+            // 
+            // btnRetour
+            // 
+            btnRetour.Location = new Point(787, 448);
+            btnRetour.Name = "btnRetour";
+            btnRetour.Size = new Size(75, 23);
+            btnRetour.TabIndex = 156;
+            btnRetour.Text = "Retour";
+            btnRetour.UseVisualStyleBackColor = true;
+            // 
+            // btnRetourner
+            // 
+            btnRetourner.Location = new Point(8, 59);
+            btnRetourner.Name = "btnRetourner";
+            btnRetourner.Size = new Size(75, 23);
+            btnRetourner.TabIndex = 155;
+            btnRetourner.Text = "Retourner";
+            btnRetourner.UseVisualStyleBackColor = true;
+            btnRetourner.Click += btnRetourner_Click;
+            // 
+            // btnAjouter
+            // 
+            btnAjouter.Location = new Point(8, 12);
+            btnAjouter.Name = "btnAjouter";
+            btnAjouter.Size = new Size(75, 23);
+            btnAjouter.TabIndex = 154;
+            btnAjouter.Text = "Ajouter";
+            btnAjouter.UseVisualStyleBackColor = true;
+            btnAjouter.Click += btnAjouter_Click;
+            // 
+            // cmbUsager
+            // 
+            cmbUsager.FormattingEnabled = true;
+            cmbUsager.Location = new Point(139, 12);
+            cmbUsager.Name = "cmbUsager";
+            cmbUsager.Size = new Size(121, 23);
+            cmbUsager.TabIndex = 184;
+            cmbUsager.Text = "Usager";
+            // 
+            // cmbLivre
+            // 
+            cmbLivre.FormattingEnabled = true;
+            cmbLivre.Location = new Point(301, 12);
+            cmbLivre.Name = "cmbLivre";
+            cmbLivre.Size = new Size(121, 23);
+            cmbLivre.TabIndex = 185;
+            cmbLivre.Text = "Livre";
+            // 
+            // dtpDateEmprunt
+            // 
+            dtpDateEmprunt.Location = new Point(463, 12);
+            dtpDateEmprunt.Name = "dtpDateEmprunt";
+            dtpDateEmprunt.Size = new Size(200, 23);
+            dtpDateEmprunt.TabIndex = 186;
+            // 
+            // dtpRetourPrevu
+            // 
+            dtpRetourPrevu.Location = new Point(709, 12);
+            dtpRetourPrevu.Name = "dtpRetourPrevu";
+            dtpRetourPrevu.Size = new Size(200, 23);
+            dtpRetourPrevu.TabIndex = 187;
+            // 
+            // txtEtat
+            // 
+            txtEtat.Location = new Point(965, 12);
+            txtEtat.Name = "txtEtat";
+            txtEtat.ReadOnly = true;
+            txtEtat.Size = new Size(100, 23);
+            txtEtat.TabIndex = 188;
+            // 
+            // dtpDateRetourReel
+            // 
+            dtpDateRetourReel.Location = new Point(375, 61);
+            dtpDateRetourReel.Name = "dtpDateRetourReel";
+            dtpDateRetourReel.Size = new Size(200, 23);
+            dtpDateRetourReel.TabIndex = 189;
+            // 
+            // EmpruntForm1
+            // 
+            AutoScaleDimensions = new SizeF(7F, 15F);
+            AutoScaleMode = AutoScaleMode.Font;
+            ClientSize = new Size(1077, 517);
+            Controls.Add(dtpDateRetourReel);
+            Controls.Add(txtEtat);
+            Controls.Add(dtpRetourPrevu);
+            Controls.Add(dtpDateEmprunt);
+            Controls.Add(cmbLivre);
+            Controls.Add(cmbUsager);
+            Controls.Add(label2);
+            Controls.Add(dgvAuteur);
+            Controls.Add(btnRechercher);
+            Controls.Add(btnActualiser);
+            Controls.Add(txtIdEmpruntRetour);
+            Controls.Add(lbISBN);
+            Controls.Add(lbListIdEmprunt);
+            Controls.Add(txtListeIdEmprunt);
+            Controls.Add(btnSupprimer);
+            Controls.Add(btnRetour);
+            Controls.Add(btnRetourner);
+            Controls.Add(btnAjouter);
+            Name = "EmpruntForm1";
+            Text = "EmpruntForm1";
+            ((System.ComponentModel.ISupportInitialize)dgvAuteur).EndInit();
+            ResumeLayout(false);
+            PerformLayout();
         }
 
         #endregion
+
+        private Label label2;
+        private DataGridView dgvAuteur;
+        private Button btnRechercher;
+        private Button btnActualiser;
+        private TextBox txtIdEmpruntRetour;
+        private Label lbISBN;
+        private Label lbListIdEmprunt;
+        private TextBox txtListeIdEmprunt;
+        private Button btnSupprimer;
+        private Button btnRetour;
+        private Button btnRetourner;
+        private Button btnAjouter;
+        private ComboBox cmbUsager;
+        private ComboBox cmbLivre;
+        private DateTimePicker dtpDateEmprunt;
+        private DateTimePicker dtpRetourPrevu;
+        private TextBox txtEtat;
+        private DateTimePicker dtpDateRetourReel;
     }
 }
