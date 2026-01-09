@@ -37,7 +37,7 @@
             lbDescription = new Label();
             lbNom = new Label();
             txtNomCategorie = new TextBox();
-            dgvAuteur = new DataGridView();
+            dgvCategorie = new DataGridView();
             btnRechercher = new Button();
             btnActualiser = new Button();
             lbCategorieSupp = new Label();
@@ -52,7 +52,7 @@
             btnRetour = new Button();
             btnModifier = new Button();
             btnAjouter = new Button();
-            ((System.ComponentModel.ISupportInitialize)dgvAuteur).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)dgvCategorie).BeginInit();
             SuspendLayout();
             // 
             // txtDescriptionModif
@@ -127,16 +127,16 @@
             txtNomCategorie.Size = new Size(100, 23);
             txtNomCategorie.TabIndex = 133;
             // 
-            // dgvAuteur
+            // dgvCategorie
             // 
-            dgvAuteur.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            dgvAuteur.Location = new Point(16, 283);
-            dgvAuteur.MultiSelect = false;
-            dgvAuteur.Name = "dgvAuteur";
-            dgvAuteur.ReadOnly = true;
-            dgvAuteur.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-            dgvAuteur.Size = new Size(655, 183);
-            dgvAuteur.TabIndex = 132;
+            dgvCategorie.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            dgvCategorie.Location = new Point(16, 283);
+            dgvCategorie.MultiSelect = false;
+            dgvCategorie.Name = "dgvCategorie";
+            dgvCategorie.ReadOnly = true;
+            dgvCategorie.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+            dgvCategorie.Size = new Size(655, 183);
+            dgvCategorie.TabIndex = 132;
             // 
             // btnRechercher
             // 
@@ -280,7 +280,7 @@
             Controls.Add(lbDescription);
             Controls.Add(lbNom);
             Controls.Add(txtNomCategorie);
-            Controls.Add(dgvAuteur);
+            Controls.Add(dgvCategorie);
             Controls.Add(btnRechercher);
             Controls.Add(btnActualiser);
             Controls.Add(lbCategorieSupp);
@@ -297,7 +297,7 @@
             Controls.Add(btnAjouter);
             Name = "CategorieForm1";
             Text = "CategorieForm1";
-            ((System.ComponentModel.ISupportInitialize)dgvAuteur).EndInit();
+            ((System.ComponentModel.ISupportInitialize)dgvCategorie).EndInit();
             ResumeLayout(false);
             PerformLayout();
         }
@@ -313,7 +313,7 @@
         private Label lbDescription;
         private Label lbNom;
         private TextBox txtNomCategorie;
-        private DataGridView dgvAuteur;
+        private DataGridView dgvCategorie;
         private Button btnRechercher;
         private Button btnActualiser;
         private Label lbCategorieSupp;

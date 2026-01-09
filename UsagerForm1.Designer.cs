@@ -37,7 +37,7 @@
             lbPrenom = new Label();
             lbNomUsager = new Label();
             txtNomUsager = new TextBox();
-            dgvAuteur = new DataGridView();
+            dgvUsager = new DataGridView();
             btnRechercher = new Button();
             btnActualiser = new Button();
             lbUsagerSupp = new Label();
@@ -62,7 +62,7 @@
             txtTelephoneModif = new TextBox();
             label1 = new Label();
             label5 = new Label();
-            ((System.ComponentModel.ISupportInitialize)dgvAuteur).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)dgvUsager).BeginInit();
             SuspendLayout();
             // 
             // txtPrenomUsagerModif
@@ -137,16 +137,16 @@
             txtNomUsager.Size = new Size(100, 23);
             txtNomUsager.TabIndex = 133;
             // 
-            // dgvAuteur
+            // dgvUsager
             // 
-            dgvAuteur.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            dgvAuteur.Location = new Point(12, 288);
-            dgvAuteur.MultiSelect = false;
-            dgvAuteur.Name = "dgvAuteur";
-            dgvAuteur.ReadOnly = true;
-            dgvAuteur.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-            dgvAuteur.Size = new Size(655, 183);
-            dgvAuteur.TabIndex = 132;
+            dgvUsager.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            dgvUsager.Location = new Point(12, 288);
+            dgvUsager.MultiSelect = false;
+            dgvUsager.Name = "dgvUsager";
+            dgvUsager.ReadOnly = true;
+            dgvUsager.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+            dgvUsager.Size = new Size(655, 183);
+            dgvUsager.TabIndex = 132;
             // 
             // btnRechercher
             // 
@@ -384,7 +384,7 @@
             Controls.Add(lbPrenom);
             Controls.Add(lbNomUsager);
             Controls.Add(txtNomUsager);
-            Controls.Add(dgvAuteur);
+            Controls.Add(dgvUsager);
             Controls.Add(btnRechercher);
             Controls.Add(btnActualiser);
             Controls.Add(lbUsagerSupp);
@@ -401,7 +401,7 @@
             Controls.Add(btnAjouter);
             Name = "UsagerForm1";
             Text = "UsagerForm1";
-            ((System.ComponentModel.ISupportInitialize)dgvAuteur).EndInit();
+            ((System.ComponentModel.ISupportInitialize)dgvUsager).EndInit();
             ResumeLayout(false);
             PerformLayout();
         }
@@ -417,7 +417,7 @@
         private Label lbPrenom;
         private Label lbNomUsager;
         private TextBox txtNomUsager;
-        private DataGridView dgvAuteur;
+        private DataGridView dgvUsager;
         private Button btnRechercher;
         private Button btnActualiser;
         private Label lbUsagerSupp;

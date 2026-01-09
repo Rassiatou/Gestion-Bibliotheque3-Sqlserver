@@ -10,19 +10,34 @@ using System.Windows.Forms;
 
 namespace TP3_BD
 {
-    public partial class ParticipationForm1 : Form
+    public partial class ActiviteForm1 : Form
     {
-        public ParticipationForm1()
+        public ActiviteForm1()
         {
             InitializeComponent();
         }
 
-        private void btnInscrire_Click(object sender, EventArgs e)
+        private void btnAjouter_Click(object sender, EventArgs e)
         {
 
         }
 
-        private void btnRetourner_Click(object sender, EventArgs e)
+        private void btnModifier_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void btnSupprimer_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void btnVoirParticipations_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void btnVider_Click(object sender, EventArgs e)
         {
 
         }

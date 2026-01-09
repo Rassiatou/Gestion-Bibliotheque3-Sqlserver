@@ -29,7 +29,7 @@
         private void InitializeComponent()
         {
             label2 = new Label();
-            dgvAuteur = new DataGridView();
+            dgvEmprunt = new DataGridView();
             btnRechercher = new Button();
             btnActualiser = new Button();
             txtIdEmpruntRetour = new TextBox();
@@ -46,7 +46,10 @@
             dtpRetourPrevu = new DateTimePicker();
             txtEtat = new TextBox();
             dtpDateRetourReel = new DateTimePicker();
-            ((System.ComponentModel.ISupportInitialize)dgvAuteur).BeginInit();
+            lbIdEmpruntRetour = new Label();
+            lbIdEmpruntSupp = new Label();
+            txtIdEmpruntSupp = new TextBox();
+            ((System.ComponentModel.ISupportInitialize)dgvEmprunt).BeginInit();
             SuspendLayout();
             // 
             // label2
@@ -57,16 +60,16 @@
             label2.Size = new Size(0, 15);
             label2.TabIndex = 178;
             // 
-            // dgvAuteur
+            // dgvEmprunt
             // 
-            dgvAuteur.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            dgvAuteur.Location = new Point(8, 288);
-            dgvAuteur.MultiSelect = false;
-            dgvAuteur.Name = "dgvAuteur";
-            dgvAuteur.ReadOnly = true;
-            dgvAuteur.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-            dgvAuteur.Size = new Size(655, 183);
-            dgvAuteur.TabIndex = 168;
+            dgvEmprunt.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            dgvEmprunt.Location = new Point(8, 288);
+            dgvEmprunt.MultiSelect = false;
+            dgvEmprunt.Name = "dgvEmprunt";
+            dgvEmprunt.ReadOnly = true;
+            dgvEmprunt.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+            dgvEmprunt.Size = new Size(655, 183);
+            dgvEmprunt.TabIndex = 168;
             // 
             // btnRechercher
             // 
@@ -88,11 +91,9 @@
             btnActualiser.UseVisualStyleBackColor = true;
             btnActualiser.Click += btnActualiser_Click;
             // 
-           
-            // 
             // txtIdEmpruntRetour
             // 
-            txtIdEmpruntRetour.Location = new Point(178, 61);
+            txtIdEmpruntRetour.Location = new Point(188, 60);
             txtIdEmpruntRetour.Name = "txtIdEmpruntRetour";
             txtIdEmpruntRetour.ReadOnly = true;
             txtIdEmpruntRetour.Size = new Size(100, 23);
@@ -208,11 +209,40 @@
             dtpDateRetourReel.Size = new Size(200, 23);
             dtpDateRetourReel.TabIndex = 189;
             // 
+            // lbIdEmpruntRetour
+            // 
+            lbIdEmpruntRetour.AutoSize = true;
+            lbIdEmpruntRetour.Location = new Point(118, 65);
+            lbIdEmpruntRetour.Name = "lbIdEmpruntRetour";
+            lbIdEmpruntRetour.Size = new Size(63, 15);
+            lbIdEmpruntRetour.TabIndex = 190;
+            lbIdEmpruntRetour.Text = "IdEmprunt";
+            // 
+            // lbIdEmpruntSupp
+            // 
+            lbIdEmpruntSupp.AutoSize = true;
+            lbIdEmpruntSupp.Location = new Point(118, 107);
+            lbIdEmpruntSupp.Name = "lbIdEmpruntSupp";
+            lbIdEmpruntSupp.Size = new Size(63, 15);
+            lbIdEmpruntSupp.TabIndex = 191;
+            lbIdEmpruntSupp.Text = "IdEmprunt";
+            // 
+            // txtIdEmpruntSupp
+            // 
+            txtIdEmpruntSupp.Location = new Point(188, 103);
+            txtIdEmpruntSupp.Name = "txtIdEmpruntSupp";
+            txtIdEmpruntSupp.ReadOnly = true;
+            txtIdEmpruntSupp.Size = new Size(100, 23);
+            txtIdEmpruntSupp.TabIndex = 192;
+            // 
             // EmpruntForm1
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(1077, 517);
+            Controls.Add(txtIdEmpruntSupp);
+            Controls.Add(lbIdEmpruntSupp);
+            Controls.Add(lbIdEmpruntRetour);
             Controls.Add(dtpDateRetourReel);
             Controls.Add(txtEtat);
             Controls.Add(dtpRetourPrevu);
@@ -220,7 +250,7 @@
             Controls.Add(cmbLivre);
             Controls.Add(cmbUsager);
             Controls.Add(label2);
-            Controls.Add(dgvAuteur);
+            Controls.Add(dgvEmprunt);
             Controls.Add(btnRechercher);
             Controls.Add(btnActualiser);
             Controls.Add(txtIdEmpruntRetour);
@@ -233,7 +263,7 @@
             Controls.Add(btnAjouter);
             Name = "EmpruntForm1";
             Text = "EmpruntForm1";
-            ((System.ComponentModel.ISupportInitialize)dgvAuteur).EndInit();
+            ((System.ComponentModel.ISupportInitialize)dgvEmprunt).EndInit();
             ResumeLayout(false);
             PerformLayout();
         }
@@ -241,7 +271,7 @@
         #endregion
 
         private Label label2;
-        private DataGridView dgvAuteur;
+        private DataGridView dgvEmprunt;
         private Button btnRechercher;
         private Button btnActualiser;
         private TextBox txtIdEmpruntRetour;
@@ -258,5 +288,8 @@
         private DateTimePicker dtpRetourPrevu;
         private TextBox txtEtat;
         private DateTimePicker dtpDateRetourReel;
+        private Label lbIdEmpruntRetour;
+        private Label lbIdEmpruntSupp;
+        private TextBox txtIdEmpruntSupp;
     }
 }

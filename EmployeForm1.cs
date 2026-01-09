@@ -16,5 +16,40 @@ namespace TP3_BD
         {
             InitializeComponent();
         }
+
+        private void btnAjouter_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void btnModifier_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void btnSupprimer_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void btnVider_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void btnActualiser_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void btnRechercher_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void btnRetour_Click(object sender, EventArgs e)
+        {
+
+        }
     }
 }
