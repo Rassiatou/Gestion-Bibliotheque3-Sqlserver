@@ -38,7 +38,7 @@
             btnActualiser = new Button();
             txtIdParticipationRetirer = new TextBox();
             lbISBN = new Label();
-            this.lbListIdParticipation = new Label();
+            //this.lbListIdParticipation = new Label();
             txtListeIdParticipation = new TextBox();
             btnRetour = new Button();
             btnRetourner = new Button();
@@ -137,14 +137,14 @@
             lbISBN.TabIndex = 199;
             // 
             // lbListIdParticipation
-            // 
-            this.lbListIdParticipation.AutoSize = true;
-            this.lbListIdParticipation.Location = new Point(344, 239);
-            this.lbListIdParticipation.Name = "lbListIdParticipation";
-            this.lbListIdParticipation.Size = new Size(84, 15);
-            this.lbListIdParticipation.TabIndex = 198;
-            this.lbListIdParticipation.Text = "IdParticipation";
-            // 
+            //// 
+            //this.lbListIdParticipation.AutoSize = true;
+            //this.lbListIdParticipation.Location = new Point(344, 239);
+            //this.lbListIdParticipation.Name = "lbListIdParticipation";
+            //this.lbListIdParticipation.Size = new Size(84, 15);
+            //this.lbListIdParticipation.TabIndex = 198;
+            //this.lbListIdParticipation.Text = "IdParticipation";
+            //// 
             // txtListeIdParticipation
             // 
             txtListeIdParticipation.Location = new Point(435, 235);
@@ -208,7 +208,7 @@
             Controls.Add(btnActualiser);
             Controls.Add(txtIdParticipationRetirer);
             Controls.Add(lbISBN);
-            Controls.Add(this.lbListIdParticipation);
+            //Controls.Add(this.lbListIdParticipation);
             Controls.Add(txtListeIdParticipation);
             Controls.Add(btnRetour);
             Controls.Add(btnRetourner);
