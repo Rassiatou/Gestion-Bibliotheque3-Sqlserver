@@ -221,7 +221,6 @@ namespace TP3_BD
         {
             try
             {
-                // ✅ Tu m'as donné ce champ : txtIdActiviteSupp
                 if (!int.TryParse(txtIdActiviteSupp.Text.Trim(), out int id))
                 {
                     MessageBox.Show("Sélectionne une activité à supprimer.");

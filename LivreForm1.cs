@@ -37,7 +37,7 @@ namespace TP3_BD
         }
 
         // ----------------------------
-        // Seed (optionnel)
+        // Seed
         // ----------------------------
         private void SeedSiVide()
         {
@@ -417,13 +417,13 @@ namespace TP3_BD
         private bool ValiderModification(out string titre, out string isbn, out int annee,
                                   out int quantite, out int auteurId, out int categorieId)
         {
-            // ✅ IMPORTANT : titre vient du champ MODIF
+            // IMPORTANT : titre vient du champ MODIF
             titre = txtTitreModif.Text.Trim();
 
-            // ⚠️ le reste garde ton fonctionnement actuel (mêmes champs que ton form actuel)
+            // le reste garde ton fonctionnement actuel (mêmes champs que ton form actuel)
             isbn = txtISBN.Text.Trim();
             annee = 0;
-            quantite = (int)nudQuantite.Value;
+            quantite = (int)nudQuantiteModif.Value;
             auteurId = 0;
             categorieId = 0;
 

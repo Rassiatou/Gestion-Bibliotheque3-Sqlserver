@@ -44,12 +44,10 @@
             cmbLivre = new ComboBox();
             dtpDateEmprunt = new DateTimePicker();
             dtpRetourPrevu = new DateTimePicker();
-            txtEtat = new TextBox();
             dtpDateRetourReel = new DateTimePicker();
             lbIdEmpruntRetour = new Label();
             lbIdEmpruntSupp = new Label();
             txtIdEmpruntSupp = new TextBox();
-            lbStatut = new Label();
             ((System.ComponentModel.ISupportInitialize)dgvEmprunt).BeginInit();
             SuspendLayout();
             // 
@@ -196,14 +194,6 @@
             dtpRetourPrevu.Size = new Size(200, 23);
             dtpRetourPrevu.TabIndex = 187;
             // 
-            // txtEtat
-            // 
-            txtEtat.Location = new Point(1028, 13);
-            txtEtat.Name = "txtEtat";
-            txtEtat.ReadOnly = true;
-            txtEtat.Size = new Size(100, 23);
-            txtEtat.TabIndex = 188;
-            // 
             // dtpDateRetourReel
             // 
             dtpDateRetourReel.Location = new Point(375, 61);
@@ -237,26 +227,15 @@
             txtIdEmpruntSupp.Size = new Size(100, 23);
             txtIdEmpruntSupp.TabIndex = 192;
             // 
-            // lbStatut
-            // 
-            lbStatut.AutoSize = true;
-            lbStatut.Location = new Point(972, 16);
-            lbStatut.Name = "lbStatut";
-            lbStatut.Size = new Size(38, 15);
-            lbStatut.TabIndex = 193;
-            lbStatut.Text = "Statut";
-            // 
             // EmpruntForm1
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(1242, 517);
-            Controls.Add(lbStatut);
             Controls.Add(txtIdEmpruntSupp);
             Controls.Add(lbIdEmpruntSupp);
             Controls.Add(lbIdEmpruntRetour);
             Controls.Add(dtpDateRetourReel);
-            Controls.Add(txtEtat);
             Controls.Add(dtpRetourPrevu);
             Controls.Add(dtpDateEmprunt);
             Controls.Add(cmbLivre);
@@ -298,11 +277,9 @@
         private ComboBox cmbLivre;
         private DateTimePicker dtpDateEmprunt;
         private DateTimePicker dtpRetourPrevu;
-        private TextBox txtEtat;
         private DateTimePicker dtpDateRetourReel;
         private Label lbIdEmpruntRetour;
         private Label lbIdEmpruntSupp;
         private TextBox txtIdEmpruntSupp;
-        private Label lbStatut;
     }
 }

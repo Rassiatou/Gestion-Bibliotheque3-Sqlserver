@@ -30,7 +30,7 @@
         {
             cbCategorie = new ComboBox();
             cbAuteur = new ComboBox();
-            numericUpDown1 = new NumericUpDown();
+            nudQuantiteModif = new NumericUpDown();
             nudQuantite = new NumericUpDown();
             dgvLivres = new DataGridView();
             cmbCategorie = new ComboBox();
@@ -41,7 +41,7 @@
             txtIdLivreSupp = new TextBox();
             lbIdLivre = new Label();
             txtIdLivre = new TextBox();
-            label1 = new Label();
+            lbQuantiteModif = new Label();
             label3 = new Label();
             textBox3 = new TextBox();
             label5 = new Label();
@@ -60,7 +60,7 @@
             btnAjouter = new Button();
             textAnnée = new TextBox();
             lbAnnée = new Label();
-            ((System.ComponentModel.ISupportInitialize)numericUpDown1).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)nudQuantiteModif).BeginInit();
             ((System.ComponentModel.ISupportInitialize)nudQuantite).BeginInit();
             ((System.ComponentModel.ISupportInitialize)dgvLivres).BeginInit();
             SuspendLayout();
@@ -83,12 +83,12 @@
             cbAuteur.TabIndex = 107;
             cbAuteur.Text = "Auteur";
             // 
-            // numericUpDown1
+            // nudQuantiteModif
             // 
-            numericUpDown1.Location = new Point(1182, 62);
-            numericUpDown1.Name = "numericUpDown1";
-            numericUpDown1.Size = new Size(120, 23);
-            numericUpDown1.TabIndex = 106;
+            nudQuantiteModif.Location = new Point(1182, 62);
+            nudQuantiteModif.Name = "nudQuantiteModif";
+            nudQuantiteModif.Size = new Size(120, 23);
+            nudQuantiteModif.TabIndex = 106;
             // 
             // nudQuantite
             // 
@@ -181,14 +181,14 @@
             txtIdLivre.Size = new Size(100, 23);
             txtIdLivre.TabIndex = 96;
             // 
-            // label1
+            // lbQuantiteModif
             // 
-            label1.AutoSize = true;
-            label1.Location = new Point(1118, 63);
-            label1.Name = "label1";
-            label1.Size = new Size(58, 15);
-            label1.TabIndex = 93;
-            label1.Text = "Quantités";
+            lbQuantiteModif.AutoSize = true;
+            lbQuantiteModif.Location = new Point(1118, 63);
+            lbQuantiteModif.Name = "lbQuantiteModif";
+            lbQuantiteModif.Size = new Size(58, 15);
+            lbQuantiteModif.TabIndex = 93;
+            lbQuantiteModif.Text = "Quantités";
             // 
             // label3
             // 
@@ -354,7 +354,7 @@
             Controls.Add(textAnnée);
             Controls.Add(cbCategorie);
             Controls.Add(cbAuteur);
-            Controls.Add(numericUpDown1);
+            Controls.Add(nudQuantiteModif);
             Controls.Add(nudQuantite);
             Controls.Add(dgvLivres);
             Controls.Add(cmbCategorie);
@@ -365,7 +365,7 @@
             Controls.Add(txtIdLivreSupp);
             Controls.Add(lbIdLivre);
             Controls.Add(txtIdLivre);
-            Controls.Add(label1);
+            Controls.Add(lbQuantiteModif);
             Controls.Add(label3);
             Controls.Add(textBox3);
             Controls.Add(label5);
@@ -384,7 +384,7 @@
             Controls.Add(btnAjouter);
             Name = "LivreForm1";
             Text = "LivreForm1";
-            ((System.ComponentModel.ISupportInitialize)numericUpDown1).EndInit();
+            ((System.ComponentModel.ISupportInitialize)nudQuantiteModif).EndInit();
             ((System.ComponentModel.ISupportInitialize)nudQuantite).EndInit();
             ((System.ComponentModel.ISupportInitialize)dgvLivres).EndInit();
             ResumeLayout(false);
@@ -395,7 +395,7 @@
 
         private ComboBox cbCategorie;
         private ComboBox cbAuteur;
-        private NumericUpDown numericUpDown1;
+        private NumericUpDown nudQuantiteModif;
         private NumericUpDown nudQuantite;
         private DataGridView dgvLivres;
         private ComboBox cmbCategorie;
@@ -406,7 +406,7 @@
         private TextBox txtIdLivreSupp;
         private Label lbIdLivre;
         private TextBox txtIdLivre;
-        private Label label1;
+        private Label lbQuantiteModif;
         private Label label3;
         private TextBox textBox3;
         private Label label5;

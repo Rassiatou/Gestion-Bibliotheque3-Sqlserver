@@ -304,7 +304,7 @@ namespace TP3_BD
             }
             catch
             {
-                // évite crash si un control a été renommé/supprimé
+               
             }
         }
     }
