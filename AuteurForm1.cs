@@ -14,62 +14,77 @@ namespace TP3_BD
         public AuteurForm1()
         {
             InitializeComponent();
-
             this.Load += AuteurForm1_Load;
         }
 
         private void AuteurForm1_Load(object? sender, EventArgs e)
         {
-            ChargerGrille();
+            try
+            {
+                ChargerGrille();
+                ViderChamps();
+
+                // Important si pas fait dans le designer
+                dgvAuteur.CellClick += dgvAuteur_CellClick;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Erreur au chargement : " + ex.Message);
+            }
         }
 
-        // ==========================
-        // CHARGER LA GRILLE
-        // ==========================
+        // ----------------------------
+        // Charger la grille
+        // ----------------------------
         private void ChargerGrille()
         {
             try
             {
                 dgvAuteur.DataSource = null;
-                dgvAuteur.DataSource = _db.Auteurs
+
+                var data = _db.Auteurs
                     .OrderBy(a => a.Nom)
                     .ThenBy(a => a.Prenom)
                     .ToList();
 
+                dgvAuteur.DataSource = data;
                 dgvAuteur.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
+                dgvAuteur.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+                dgvAuteur.ReadOnly = true;
+                dgvAuteur.MultiSelect = false;
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Erreur chargement auteurs : " + ex.Message);
+                MessageBox.Show("Erreur (chargement grille) : " + ex.Message);
             }
         }
 
-        // ==========================
-        // AJOUTER
-        // ==========================
+        // ----------------------------
+        // Ajouter
+        // ----------------------------
         private void btnAjouter_Click(object sender, EventArgs e)
         {
             try
             {
-                if (!ValiderChamps()) return;
+                if (!ValiderAjout(out string nom, out string prenom))
+                    return;
 
-                Auteur auteur = new Auteur
+                var a = new Auteur
                 {
-                    Nom = txtNomAuteur.Text.Trim(),
-                    Prenom = txtPrenomAuteur.Text.Trim()
+                    Nom = nom,
+                    Prenom = prenom
                 };
 
-                _db.Auteurs.Add(auteur);
+                _db.Auteurs.Add(a);
                 _db.SaveChanges();
 
                 ChargerGrille();
                 ViderChamps();
-
-                MessageBox.Show("Auteur ajouté ✅");
+                MessageBox.Show("Auteur ajouté");
             }
             catch (DbUpdateException ex)
             {
-                MessageBox.Show("Erreur BD (ajout) : " + ex.Message);
+                MessageBox.Show("Erreur BD (ajout) : " + (ex.InnerException?.Message ?? ex.Message));
             }
             catch (Exception ex)
             {
@@ -77,42 +92,41 @@ namespace TP3_BD
             }
         }
 
-        // ==========================
-        // MODIFIER
-        // ==========================
+        // ----------------------------
+        // Modifier
+        // ----------------------------
         private void btnModifier_Click(object sender, EventArgs e)
         {
             try
             {
-                // Id obligatoire
                 if (!int.TryParse(txtIdAuteur.Text.Trim(), out int id))
                 {
-                    MessageBox.Show("Sélectionne un auteur dans la liste.");
+                    MessageBox.Show("Sélectionne un auteur à modifier.");
                     return;
                 }
 
-                if (!ValiderChamps()) return;
+                if (!ValiderModification(out string nom, out string prenom))
+                    return;
 
-                var auteur = _db.Auteurs.FirstOrDefault(a => a.AuteurId == id);
-                if (auteur == null)
+                var a = _db.Auteurs.FirstOrDefault(x => x.AuteurId == id);
+                if (a == null)
                 {
                     MessageBox.Show("Auteur introuvable.");
                     return;
                 }
 
-                auteur.Nom = txtNomAuteur.Text.Trim();
-                auteur.Prenom = txtPrenomAuteur.Text.Trim();
+                a.Nom = nom;
+                a.Prenom = prenom;
 
                 _db.SaveChanges();
 
                 ChargerGrille();
                 ViderChamps();
-
-                MessageBox.Show("Auteur modifié ✅");
+                MessageBox.Show("Auteur modifié");
             }
             catch (DbUpdateException ex)
             {
-                MessageBox.Show("Erreur BD (modif) : " + ex.Message);
+                MessageBox.Show("Erreur BD (modif) : " + (ex.InnerException?.Message ?? ex.Message));
             }
             catch (Exception ex)
             {
@@ -120,56 +134,49 @@ namespace TP3_BD
             }
         }
 
-        // ==========================
-        // SUPPRIMER
-        // ==========================
+        // ----------------------------
+        // Supprimer (INTERDIT si utilisé par un Livre)
+        // ----------------------------
         private void btnSupprimer_Click(object sender, EventArgs e)
         {
             try
             {
-                if (!int.TryParse(txtIdAuteur.Text.Trim(), out int id))
+                if (!int.TryParse(txtIdAuteurSupp.Text.Trim(), out int id))
                 {
-                    MessageBox.Show("Sélectionne un auteur dans la liste.");
+                    MessageBox.Show("Sélectionne un auteur à supprimer.");
                     return;
                 }
 
-                // Inclure Livres pour vérifier la relation
-                var auteur = _db.Auteurs
-                    .Include(a => a.Livres)
-                    .FirstOrDefault(a => a.AuteurId == id);
+                // Règle : ne pas supprimer si un livre utilise cet auteur
+                bool estUtilise = _db.Livres.Any(l => l.AuteurId == id);
+                if (estUtilise)
+                {
+                    MessageBox.Show("Suppression interdite : cet auteur est utilisé par au moins un livre.");
+                    return;
+                }
 
-                if (auteur == null)
+                var a = _db.Auteurs.FirstOrDefault(x => x.AuteurId == id);
+                if (a == null)
                 {
                     MessageBox.Show("Auteur introuvable.");
                     return;
                 }
 
-                // ✅ empêche la suppression si l’auteur a des livres
-                if (auteur.Livres != null && auteur.Livres.Any())
-                {
-                    MessageBox.Show("Suppression impossible : cet auteur a des livres associés.");
-                    return;
-                }
-
-                var confirm = MessageBox.Show(
-                    "Supprimer cet auteur ?",
-                    "Confirmation",
-                    MessageBoxButtons.YesNo,
-                    MessageBoxIcon.Warning);
+                var confirm = MessageBox.Show("Confirmer suppression ?", "Suppression",
+                    MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
 
                 if (confirm != DialogResult.Yes) return;
 
-                _db.Auteurs.Remove(auteur);
+                _db.Auteurs.Remove(a);
                 _db.SaveChanges();
 
                 ChargerGrille();
                 ViderChamps();
-
-                MessageBox.Show("Auteur supprimé ✅");
+                MessageBox.Show("Auteur supprimé");
             }
             catch (DbUpdateException ex)
             {
-                MessageBox.Show("Erreur BD (suppression) : " + ex.Message);
+                MessageBox.Show("Erreur BD (suppression) : " + (ex.InnerException?.Message ?? ex.Message));
             }
             catch (Exception ex)
             {
@@ -177,56 +184,30 @@ namespace TP3_BD
             }
         }
 
-        // ==========================
-        // VIDER
-        // ==========================
-        private void btnVider_Click(object sender, EventArgs e)
-        {
-            ViderChamps();
-        }
-
-        private void ViderChamps()
-        {
-            txtIdAuteur.Clear();
-            txtNomAuteur.Clear();
-            txtPrenomAuteur.Clear();
-
-            // ✅ IMPORTANT : change ce nom si ton champ s'appelle autrement
-            txtListeIdAuteur.Clear();
-        }
-
-        // ==========================
-        // ACTUALISER
-        // ==========================
-        private void btnActualiser_Click(object sender, EventArgs e)
-        {
-            ChargerGrille();
-        }
-
-        // ==========================
-        // RECHERCHER (par IdAuteur)
-        // ==========================
+        // ----------------------------
+        // Rechercher par IdAuteur
+        // ----------------------------
         private void btnRechercher_Click(object sender, EventArgs e)
         {
             try
             {
-                // ✅ IMPORTANT : change ce nom si ton champ s'appelle autrement
                 if (!int.TryParse(txtListeIdAuteur.Text.Trim(), out int id))
                 {
-                    MessageBox.Show("Entre un IdAuteur valide (nombre).");
+                    MessageBox.Show("Entre un IdAuteur valide.");
                     return;
                 }
 
-                var auteur = _db.Auteurs.FirstOrDefault(a => a.AuteurId == id);
-
-                if (auteur == null)
+                var data = _db.Auteurs
+                    .Where(a => a.AuteurId == id)
+                    .ToList();
+                if (data.Count == 0)
                 {
-                    MessageBox.Show("Aucun auteur trouvé avec cet IdAuteur.");
+                    MessageBox.Show("Aucun AUTEUR trouvé avec cet IdAuteur.");
                     return;
                 }
 
                 dgvAuteur.DataSource = null;
-                dgvAuteur.DataSource = new[] { auteur }.ToList();
+                dgvAuteur.DataSource = data;
             }
             catch (Exception ex)
             {
@@ -234,48 +215,96 @@ namespace TP3_BD
             }
         }
 
-        // ==========================
-        // RETOUR
-        // ==========================
-        private void btnRetour_Click(object sender, EventArgs e)
+        // ----------------------------
+        // Actualiser + Vider
+        // ----------------------------
+        private void btnActualiser_Click(object sender, EventArgs e)
         {
-            this.Close();
+            ChargerGrille();
         }
 
-        // ==========================
-        // VALIDATION
-        // ==========================
-        private bool ValiderChamps()
+        private void btnVider_Click(object sender, EventArgs e)
         {
-            if (string.IsNullOrWhiteSpace(txtNomAuteur.Text))
+            ViderChamps();
+        }
+
+        private void ViderChamps()
+        {
+            // Ajout
+            txtNomAuteur.Clear();
+            txtPrenomAuteur.Clear();
+
+            // Modif
+            txtIdAuteur.Clear();
+            txtNomAuteurModif.Clear();
+            txtPrenomAuteurModif.Clear();
+
+            // Supp
+            txtIdAuteurSupp.Clear();
+
+            // Recherche
+            txtListeIdAuteur.Clear();
+        }
+
+        // ----------------------------
+        // Click grille -> remplir modif/supp
+        // ----------------------------
+        private void dgvAuteur_CellClick(object? sender, DataGridViewCellEventArgs e)
+        {
+            if (e.RowIndex < 0) return;
+
+            if (dgvAuteur.Rows[e.RowIndex].DataBoundItem is Auteur a)
+            {
+                // Modif
+                txtIdAuteur.Text = a.AuteurId.ToString();
+                txtNomAuteurModif.Text = a.Nom;
+                txtPrenomAuteurModif.Text = a.Prenom;
+
+                // Supp
+                txtIdAuteurSupp.Text = a.AuteurId.ToString();
+            }
+        }
+
+        // ----------------------------
+        // Validations
+        // ----------------------------
+        private bool ValiderAjout(out string nom, out string prenom)
+        {
+            nom = txtNomAuteur.Text.Trim();
+            prenom = txtPrenomAuteur.Text.Trim();
+
+            if (string.IsNullOrWhiteSpace(nom))
             {
                 MessageBox.Show("Nom obligatoire.");
                 return false;
             }
 
-            if (string.IsNullOrWhiteSpace(txtPrenomAuteur.Text))
+            // Prenom optionnel ? -> si tu veux l’obliger, décommente :
+            // if (string.IsNullOrWhiteSpace(prenom)) { MessageBox.Show("Prénom obligatoire."); return false; }
+
+            return true;
+        }
+
+        private bool ValiderModification(out string nom, out string prenom)
+        {
+            nom = txtNomAuteurModif.Text.Trim();
+            prenom = txtPrenomAuteurModif.Text.Trim();
+
+            if (string.IsNullOrWhiteSpace(nom))
             {
-                MessageBox.Show("Prénom obligatoire.");
+                MessageBox.Show("Nom obligatoire (modification).");
                 return false;
             }
 
             return true;
         }
 
-        // ==========================
-        // OPTION : clic dans la grille
-        // (À brancher dans le designer: dgvAuteurs -> CellClick)
-        // ==========================
-        private void dgvAuteurs_CellClick(object sender, DataGridViewCellEventArgs e)
+        // ----------------------------
+        // Retour
+        // ----------------------------
+        private void btnRetour_Click(object sender, EventArgs e)
         {
-            if (e.RowIndex < 0) return;
-
-            if (dgvAuteur.Rows[e.RowIndex].DataBoundItem is Auteur a)
-            {
-                txtIdAuteur.Text = a.AuteurId.ToString();
-                txtNomAuteur.Text = a.Nom;
-                txtPrenomAuteur.Text = a.Prenom;
-            }
+            this.Close();
         }
     }
 }

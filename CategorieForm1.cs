@@ -1,4 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using System;
+using System.Linq;
+using System.Windows.Forms;
 using TP3_BD.Data;
 using TP3_BD.Entities;
 
@@ -11,61 +14,59 @@ namespace TP3_BD
         public CategorieForm1()
         {
             InitializeComponent();
-
-            // Quand le form s'ouvre, on charge la grille
             this.Load += CategorieForm1_Load;
         }
 
         private void CategorieForm1_Load(object? sender, EventArgs e)
         {
-            ChargerGrille();
-        }
-
-        // =========================
-        // 1) CHARGER LA GRILLE
-        // =========================
-        private void ChargerGrille()
-        {
             try
             {
-                dgvCategorie.DataSource = null;
+                ChargerGrille();
+                ViderChamps();
 
-                var data = _db.Categories
-                    .OrderBy(c => c.Nom)
-                    .ToList();
-
-                dgvCategorie.DataSource = data;
-                dgvCategorie.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
+                // Important : si pas branché dans le Designer
+                dgvCategorie.CellClick -= dgvCategorie_CellClick;
+                dgvCategorie.CellClick += dgvCategorie_CellClick;
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Erreur lors du chargement des catégories.\n\n" + ex.Message,
-                    "Erreur", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show("Erreur au chargement : " + ex.Message);
             }
         }
 
-        // =========================
-        // 2) AJOUTER
-        // =========================
+        // ----------------------------
+        // Chargement grille
+        // ----------------------------
+        private void ChargerGrille()
+        {
+            dgvCategorie.DataSource = null;
+
+            var data = _db.Categories
+                .OrderBy(c => c.Nom)
+                .ToList();
+
+            dgvCategorie.DataSource = data;
+            dgvCategorie.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
+            dgvCategorie.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+            dgvCategorie.ReadOnly = true;
+            dgvCategorie.MultiSelect = false;
+        }
+
+        // ----------------------------
+        // Ajouter
+        // ----------------------------
         private void btnAjouter_Click(object sender, EventArgs e)
         {
             try
             {
-                // Validation
-                var nom = txtNomCategorie.Text.Trim();
-                var desc = txtDescription.Text.Trim();
-
-                if (string.IsNullOrWhiteSpace(nom))
-                {
-                    MessageBox.Show("Le nom est obligatoire.", "Validation", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                if (!ValiderAjout(out string nom, out string desc))
                     return;
-                }
 
-                // Optionnel: éviter doublons
+                // (Optionnel) éviter doublon Nom
                 bool existe = _db.Categories.Any(c => c.Nom == nom);
                 if (existe)
                 {
-                    MessageBox.Show("Cette catégorie existe déjà.", "Validation", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    MessageBox.Show("Cette catégorie existe déjà.");
                     return;
                 }
 
@@ -78,43 +79,48 @@ namespace TP3_BD
                 _db.Categories.Add(cat);
                 _db.SaveChanges();
 
-                MessageBox.Show("Catégorie ajoutée ✅", "Succès", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 ChargerGrille();
                 ViderChamps();
+                MessageBox.Show("Catégorie ajoutée");
+            }
+            catch (DbUpdateException ex)
+            {
+                MessageBox.Show("Erreur BD (ajout) : " + (ex.InnerException?.Message ?? ex.Message));
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Erreur lors de l'ajout.\n\n" + ex.Message,
-                    "Erreur", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show("Erreur (ajout) : " + ex.Message);
             }
         }
 
-        // =========================
-        // 3) MODIFIER
-        // =========================
+        // ----------------------------
+        // Modifier
+        // ----------------------------
         private void btnModifier_Click(object sender, EventArgs e)
         {
             try
             {
                 if (!int.TryParse(txtIdCategorie.Text.Trim(), out int id))
                 {
-                    MessageBox.Show("IdCategorie invalide.", "Validation", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    MessageBox.Show("Sélectionne une catégorie à modifier.");
                     return;
                 }
 
-                var nom = txtNomCategorieModif.Text.Trim();
-                var desc = txtDescriptionModif.Text.Trim();
-
-                if (string.IsNullOrWhiteSpace(nom))
-                {
-                    MessageBox.Show("Le nom est obligatoire.", "Validation", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                if (!ValiderModification(out string nom, out string desc))
                     return;
-                }
 
                 var cat = _db.Categories.FirstOrDefault(c => c.CategorieId == id);
                 if (cat == null)
                 {
-                    MessageBox.Show("Catégorie introuvable.", "Info", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    MessageBox.Show("Catégorie introuvable.");
+                    return;
+                }
+
+                // (Optionnel) éviter doublon Nom avec une autre catégorie
+                bool doublon = _db.Categories.Any(c => c.Nom == nom && c.CategorieId != id);
+                if (doublon)
+                {
+                    MessageBox.Show("Une autre catégorie porte déjà ce nom.");
                     return;
                 }
 
@@ -123,137 +129,184 @@ namespace TP3_BD
 
                 _db.SaveChanges();
 
-                MessageBox.Show("Catégorie modifiée ✅", "Succès", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 ChargerGrille();
                 ViderChamps();
+                MessageBox.Show("Catégorie modifiée");
+            }
+            catch (DbUpdateException ex)
+            {
+                MessageBox.Show("Erreur BD (modif) : " + (ex.InnerException?.Message ?? ex.Message));
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Erreur lors de la modification.\n\n" + ex.Message,
-                    "Erreur", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show("Erreur (modif) : " + ex.Message);
             }
         }
 
-        // =========================
-        // 4) SUPPRIMER
-        // =========================
+        // ----------------------------
+        // Supprimer (bloqué si utilisée par des livres)
+        // ----------------------------
         private void btnSupprimer_Click(object sender, EventArgs e)
         {
             try
             {
                 if (!int.TryParse(txtIdCategorieSupp.Text.Trim(), out int id))
                 {
-                    MessageBox.Show("IdCategorie invalide.", "Validation", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    MessageBox.Show("Sélectionne une catégorie à supprimer.");
                     return;
                 }
 
                 var cat = _db.Categories
-                    .Include(c => c.Livres) // pour vérifier si utilisée
+                    .Include(c => c.Livres)
                     .FirstOrDefault(c => c.CategorieId == id);
 
                 if (cat == null)
                 {
-                    MessageBox.Show("Catégorie introuvable.", "Info", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    MessageBox.Show("Catégorie introuvable.");
                     return;
                 }
 
-                // Protection: si catégorie déjà utilisée par des livres
                 if (cat.Livres != null && cat.Livres.Count > 0)
                 {
-                    MessageBox.Show("Impossible de supprimer : cette catégorie est utilisée par des livres.",
-                        "Bloqué", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    MessageBox.Show("Suppression interdite : cette catégorie est utilisée par des livres.");
                     return;
                 }
 
-                var confirm = MessageBox.Show("Supprimer cette catégorie ?", "Confirmation",
-                    MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+                var confirm = MessageBox.Show(
+                    "Confirmer suppression ?",
+                    "Suppression",
+                    MessageBoxButtons.YesNo,
+                    MessageBoxIcon.Warning
+                );
 
                 if (confirm != DialogResult.Yes) return;
 
                 _db.Categories.Remove(cat);
                 _db.SaveChanges();
 
-                MessageBox.Show("Catégorie supprimée ✅", "Succès", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 ChargerGrille();
                 ViderChamps();
+                MessageBox.Show("Catégorie supprimée");
+            }
+            catch (DbUpdateException ex)
+            {
+                MessageBox.Show("Erreur BD (suppression) : " + (ex.InnerException?.Message ?? ex.Message));
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Erreur lors de la suppression.\n\n" + ex.Message,
-                    "Erreur", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show("Erreur (suppression) : " + ex.Message);
             }
         }
 
-        // =========================
-        // 5) RECHERCHER (par IdCategorie)
-        // =========================
+        // ----------------------------
+        // Rechercher par IdCategorie
+        // ----------------------------
         private void btnRechercher_Click(object sender, EventArgs e)
         {
             try
             {
                 if (!int.TryParse(txtListeIdCategorie.Text.Trim(), out int id))
                 {
-                    MessageBox.Show("Entre un IdCategorie valide.", "Validation", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    MessageBox.Show("Entre un IdCategorie valide.");
                     return;
                 }
 
-                var cat = _db.Categories
+                var data = _db.Categories
                     .Where(c => c.CategorieId == id)
                     .ToList();
 
                 dgvCategorie.DataSource = null;
-                dgvCategorie.DataSource = cat;
+                dgvCategorie.DataSource = data;
 
-                if (cat.Count == 0)
-                {
-                    MessageBox.Show("Aucun résultat.", "Info", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                }
+                if (data.Count == 0)
+                    MessageBox.Show("Aucune catégorie trouvée avec cet Id.");
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Erreur lors de la recherche.\n\n" + ex.Message,
-                    "Erreur", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show("Erreur (recherche) : " + ex.Message);
             }
         }
 
-        // =========================
-        // 6) VIDER / ACTUALISER / RETOUR
-        // =========================
-        private void btnVider_Click(object sender, EventArgs e) => ViderChamps();
+        // ----------------------------
+        // Actualiser + Vider + Retour
+        // ----------------------------
+        private void btnActualiser_Click(object sender, EventArgs e)
+        {
+            try { ChargerGrille(); }
+            catch (Exception ex) { MessageBox.Show("Erreur (actualiser) : " + ex.Message); }
+        }
 
-        private void btnActualiser_Click(object sender, EventArgs e) => ChargerGrille();
+        private void btnVider_Click(object sender, EventArgs e) => ViderChamps();
 
         private void btnRetour_Click(object sender, EventArgs e) => this.Close();
 
         private void ViderChamps()
         {
-            try
+            // Ajout
+            txtNomCategorie.Clear();
+            txtDescription.Clear();
+
+            // Modif
+            txtIdCategorie.Clear();
+            txtNomCategorieModif.Clear();
+            txtDescriptionModif.Clear();
+
+            // Supp
+            txtIdCategorieSupp.Clear();
+
+            // Recherche
+            txtListeIdCategorie.Clear();
+        }
+
+        // ----------------------------
+        // Click ligne -> remplir modif/supp
+        // ----------------------------
+        private void dgvCategorie_CellClick(object? sender, DataGridViewCellEventArgs e)
+        {
+            if (e.RowIndex < 0) return;
+
+            if (dgvCategorie.Rows[e.RowIndex].DataBoundItem is Categorie cat)
             {
-                // Ajout
-                txtNomCategorie.Clear();
-                txtDescription.Clear();
+                // Modif
+                txtIdCategorie.Text = cat.CategorieId.ToString();
+                txtNomCategorieModif.Text = cat.Nom;
+                txtDescriptionModif.Text = cat.Description;
 
-                // Modifier
-                txtIdCategorie.Clear();
-                txtNomCategorieModif.Clear();
-                txtDescriptionModif.Clear();
-
-                // Supprimer
-                txtIdCategorieSupp.Clear();
-
-                // Recherche
-                txtIdCategorie.Clear();
-            }
-            catch
-            {
-                // Ici on évite de crasher si un champ n'existe pas
-                // (pratique quand tu renommes des textbox dans le designer)
+                // Supp
+                txtIdCategorieSupp.Text = cat.CategorieId.ToString();
             }
         }
 
-        private void txtListeIdCategorie_TextChanged(object sender, EventArgs e)
+        // ----------------------------
+        // Validations
+        // ----------------------------
+        private bool ValiderAjout(out string nom, out string desc)
         {
+            nom = txtNomCategorie.Text.Trim();
+            desc = txtDescription.Text.Trim();
 
+            if (string.IsNullOrWhiteSpace(nom))
+            {
+                MessageBox.Show("Nom obligatoire.");
+                return false;
+            }
+
+            // Description peut être vide (OK)
+            return true;
+        }
+
+        private bool ValiderModification(out string nom, out string desc)
+        {
+            nom = txtNomCategorieModif.Text.Trim();
+            desc = txtDescriptionModif.Text.Trim();
+
+            if (string.IsNullOrWhiteSpace(nom))
+            {
+                MessageBox.Show("Nom obligatoire (modification).");
+                return false;
+            }
+
+            return true;
         }
     }
 }

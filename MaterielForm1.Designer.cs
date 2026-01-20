@@ -34,7 +34,7 @@
             dgvMateriel = new DataGridView();
             btnRechercher = new Button();
             btnActualiser = new Button();
-            txtIdMaterielRetour = new TextBox();
+            txtIdMaterielModif = new TextBox();
             lbListIdMateriel = new Label();
             txtListeIdMateriel = new TextBox();
             btnSupprimer = new Button();
@@ -50,7 +50,11 @@
             cmbModifTypeMateriel = new ComboBox();
             txtModifNom = new TextBox();
             lbNomModif = new Label();
+            nudQuantite = new NumericUpDown();
+            nudModifQuantite = new NumericUpDown();
             ((System.ComponentModel.ISupportInitialize)dgvMateriel).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)nudQuantite).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)nudModifQuantite).BeginInit();
             SuspendLayout();
             // 
             // txtIdMaterielSupp
@@ -110,13 +114,13 @@
             btnActualiser.UseVisualStyleBackColor = true;
             btnActualiser.Click += btnActualiser_Click;
             // 
-            // txtIdMaterielRetour
+            // txtIdMaterielModif
             // 
-            txtIdMaterielRetour.Location = new Point(189, 60);
-            txtIdMaterielRetour.Name = "txtIdMaterielRetour";
-            txtIdMaterielRetour.ReadOnly = true;
-            txtIdMaterielRetour.Size = new Size(100, 23);
-            txtIdMaterielRetour.TabIndex = 200;
+            txtIdMaterielModif.Location = new Point(189, 60);
+            txtIdMaterielModif.Name = "txtIdMaterielModif";
+            txtIdMaterielModif.ReadOnly = true;
+            txtIdMaterielModif.Size = new Size(100, 23);
+            txtIdMaterielModif.TabIndex = 200;
             // 
             // lbListIdMateriel
             // 
@@ -162,7 +166,7 @@
             btnModifier.TabIndex = 194;
             btnModifier.Text = "Modifier";
             btnModifier.UseVisualStyleBackColor = true;
-            btnModifier.Click += btnRetourner_Click;
+            btnModifier.Click += btnModifier_Click;
             // 
             // btnAjouter
             // 
@@ -252,11 +256,27 @@
             lbNomModif.TabIndex = 220;
             lbNomModif.Text = "Nom";
             // 
+            // nudQuantite
+            // 
+            nudQuantite.Location = new Point(646, 12);
+            nudQuantite.Name = "nudQuantite";
+            nudQuantite.Size = new Size(120, 23);
+            nudQuantite.TabIndex = 224;
+            // 
+            // nudModifQuantite
+            // 
+            nudModifQuantite.Location = new Point(841, 62);
+            nudModifQuantite.Name = "nudModifQuantite";
+            nudModifQuantite.Size = new Size(120, 23);
+            nudModifQuantite.TabIndex = 225;
+            // 
             // MaterielForm1
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(915, 526);
+            ClientSize = new Size(1132, 526);
+            Controls.Add(nudModifQuantite);
+            Controls.Add(nudQuantite);
             Controls.Add(cmbModifEtat);
             Controls.Add(cmbModifTypeMateriel);
             Controls.Add(txtModifNom);
@@ -272,7 +292,7 @@
             Controls.Add(dgvMateriel);
             Controls.Add(btnRechercher);
             Controls.Add(btnActualiser);
-            Controls.Add(txtIdMaterielRetour);
+            Controls.Add(txtIdMaterielModif);
             Controls.Add(lbListIdMateriel);
             Controls.Add(txtListeIdMateriel);
             Controls.Add(btnSupprimer);
@@ -282,6 +302,8 @@
             Name = "MaterielForm1";
             Text = "MaterielForm1";
             ((System.ComponentModel.ISupportInitialize)dgvMateriel).EndInit();
+            ((System.ComponentModel.ISupportInitialize)nudQuantite).EndInit();
+            ((System.ComponentModel.ISupportInitialize)nudModifQuantite).EndInit();
             ResumeLayout(false);
             PerformLayout();
         }
@@ -294,7 +316,7 @@
         private DataGridView dgvMateriel;
         private Button btnRechercher;
         private Button btnActualiser;
-        private TextBox txtIdMaterielRetour;
+        private TextBox txtIdMaterielModif;
         private Label lbListIdMateriel;
         private TextBox txtListeIdMateriel;
         private Button btnSupprimer;
@@ -310,5 +332,7 @@
         private ComboBox cmbModifTypeMateriel;
         private TextBox txtModifNom;
         private Label lbNomModif;
+        private NumericUpDown nudQuantite;
+        private NumericUpDown nudModifQuantite;
     }
 }

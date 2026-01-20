@@ -1,4 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using System;
+using System.Linq;
+using System.Windows.Forms;
 using TP3_BD.Data;
 using TP3_BD.Entities;
 
@@ -11,8 +14,11 @@ namespace TP3_BD
         public EmpruntMaterielForm1()
         {
             InitializeComponent();
-           // Au chargement du form
             this.Load += EmpruntMaterielForm1_Load;
+
+            // IMPORTANT : si pas branché dans le designer
+            dgvEmpruntMateriel.CellClick -= dgvEmpruntMateriel_CellClick;
+            dgvEmpruntMateriel.CellClick += dgvEmpruntMateriel_CellClick;
         }
 
         private void EmpruntMaterielForm1_Load(object? sender, EventArgs e)
@@ -34,46 +40,81 @@ namespace TP3_BD
         // =========================
         private void ChargerCombos()
         {
-            // Combo Usager
-            cmbUsager.DisplayMember = "Nom";
-            cmbUsager.ValueMember = "UsagerId";
-            cmbUsager.DataSource = _db.Usagers
-                .OrderBy(u => u.Nom)
+            // ✅ Combo Usager -> afficher Nom + Prenom
+            var usagers = _db.Usagers
+                .Select(u => new
+                {
+                    u.UsagerId,
+                    NomComplet = (u.Nom + " " + u.Prenom)
+                })
+                .OrderBy(x => x.NomComplet)
                 .ToList();
 
-            // Combo Materiel
-            cmbMateriel.DisplayMember = "Nom";       // adapte si ton champ = Libelle / Designation
-            cmbMateriel.ValueMember = "MaterielId";
-            cmbMateriel.DataSource = _db.Materiels
+            cmbUsager.DisplayMember = "NomComplet";
+            cmbUsager.ValueMember = "UsagerId";
+            cmbUsager.DataSource = usagers;
+
+            // ✅ Combo Materiel -> afficher Nom
+            var mats = _db.Materiels
+                .Select(m => new
+                {
+                    m.MaterielId,
+                    m.Nom
+                })
                 .OrderBy(m => m.Nom)
                 .ToList();
 
-            // Combo Etat (si tu as déjà une liste fixe)
-            // Exemple : Disponible, EnPret, Brisé, Perdu... adapte selon ton cours
-            cmbEtat.Items.Clear();
-            cmbEtat.Items.Add("En bon état");
-            cmbEtat.Items.Add("Abîmé");
-            cmbEtat.Items.Add("Brisé");
+            cmbMateriel.DisplayMember = "Nom";
+            cmbMateriel.ValueMember = "MaterielId";
+            cmbMateriel.DataSource = mats;
+
+            // ✅ Combo Etat (liste fixe)
+            if (cmbEtat.Items.Count == 0)
+            {
+                cmbEtat.Items.Add("En bon état");
+                cmbEtat.Items.Add("Abîmé");
+                cmbEtat.Items.Add("Brisé");
+            }
             cmbEtat.SelectedIndex = 0;
         }
 
         // =========================
-        // CHARGER GRILLE
+        // CHARGER GRILLE (AVEC NOMS)
         // =========================
         private void ChargerGrille()
         {
-            dgvEmpruntMateriel.DataSource = null;
+            try
+            {
+                dgvEmpruntMateriel.DataSource = null;
 
-            dgvEmpruntMateriel.DataSource = _db.EmpruntsMateriel
-                .Include(e => e.Usager)
-                .Include(e => e.Materiel)
-                .OrderByDescending(e => e.DateEmprunt)
-                .ToList();
+                var data = _db.EmpruntsMateriel
+                    .Include(e => e.Usager)
+                    .Include(e => e.Materiel)
+                    .OrderByDescending(e => e.DateEmprunt)
+                    .Select(e => new
+                    {
+                        e.EmpruntMaterielId,
+                        e.MaterielId,
+                        Materiel = e.Materiel != null ? e.Materiel.Nom : "",
+                        e.UsagerId,
+                        Usager = e.Usager != null ? (e.Usager.Nom + " " + e.Usager.Prenom) : "",
+                        DateEmprunt = e.DateEmprunt,
+                        DateRetourPrevue = e.DateRetourPrevue,
+                        DateRetour = e.DateRetour,
+                        e.Etat
+                    })
+                    .ToList();
 
-            dgvEmpruntMateriel.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
-            dgvEmpruntMateriel.ReadOnly = true;
-            dgvEmpruntMateriel.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-            dgvEmpruntMateriel.MultiSelect = false;
+                dgvEmpruntMateriel.DataSource = data;
+                dgvEmpruntMateriel.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
+                dgvEmpruntMateriel.ReadOnly = true;
+                dgvEmpruntMateriel.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+                dgvEmpruntMateriel.MultiSelect = false;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Erreur chargement grille :\n\n" + ex.Message);
+            }
         }
 
         // =========================
@@ -101,7 +142,6 @@ namespace TP3_BD
                     return;
                 }
 
-                // Vérifier disponibilité (si tu as Quantite)
                 var mat = _db.Materiels.FirstOrDefault(m => m.MaterielId == materielId);
                 if (mat == null)
                 {
@@ -109,7 +149,6 @@ namespace TP3_BD
                     return;
                 }
 
-                // Si tu as une Quantite : empêcher prêt si 0
                 if (mat.Quantite <= 0)
                 {
                     MessageBox.Show("Impossible : matériel non disponible (quantité = 0).");
@@ -126,20 +165,19 @@ namespace TP3_BD
                     Etat = cmbEtat.Text
                 };
 
-                // Enlève 1 de la quantité
                 mat.Quantite -= 1;
 
                 _db.EmpruntsMateriel.Add(emprunt);
                 _db.SaveChanges();
 
-                MessageBox.Show("Prêt matériel ajouté ✅");
+                MessageBox.Show("Prêt matériel ajouté");
                 ChargerGrille();
                 ChargerCombos();
                 ViderChamps();
             }
             catch (DbUpdateException dbEx)
             {
-                MessageBox.Show("Erreur BD :\n\n" + dbEx.Message);
+                MessageBox.Show("Erreur BD :\n\n" + (dbEx.InnerException?.Message ?? dbEx.Message));
             }
             catch (Exception ex)
             {
@@ -177,15 +215,14 @@ namespace TP3_BD
                 }
 
                 emprunt.DateRetour = dtpRetourReel.Value.Date;
-                emprunt.Etat = cmbEtat.Text; // état au retour
+                emprunt.Etat = cmbEtat.Text;
 
-                // Remettre le matériel dispo (Quantite++)
                 if (emprunt.Materiel != null)
                     emprunt.Materiel.Quantite += 1;
 
                 _db.SaveChanges();
 
-                MessageBox.Show("Matériel retourné ✅");
+                MessageBox.Show("Matériel retourné");
                 ChargerGrille();
                 ChargerCombos();
                 ViderChamps();
@@ -197,7 +234,7 @@ namespace TP3_BD
         }
 
         // =========================
-        // SUPPRIMER (AUTORISÉ même si emprunt en cours)
+        // SUPPRIMER
         // =========================
         private void btnSupprimer_Click(object sender, EventArgs e)
         {
@@ -219,16 +256,13 @@ namespace TP3_BD
                     return;
                 }
 
-                // Si l'emprunt n'était pas retourné, on remet la quantité avant suppression
                 if (emprunt.DateRetour == null && emprunt.Materiel != null)
-                {
                     emprunt.Materiel.Quantite += 1;
-                }
 
                 _db.EmpruntsMateriel.Remove(emprunt);
                 _db.SaveChanges();
 
-                MessageBox.Show("EmpruntMatériel supprimé ✅");
+                MessageBox.Show("EmpruntMatériel supprimé");
                 ChargerGrille();
                 ChargerCombos();
                 ViderChamps();
@@ -240,26 +274,57 @@ namespace TP3_BD
         }
 
         // =========================
-        // VIDER
+        // RECHERCHER par IdEmpruntMateriel (avec messages)
         // =========================
-        private void btnVider_Click(object sender, EventArgs e)
+        private void btnRechercher_Click(object sender, EventArgs e)
         {
-            ViderChamps();
-        }
+            try
+            {
+                string saisie = txtListeIdEmpruntMateriel.Text.Trim();
 
-        private void ViderChamps()
-        {
-            txtIdEmpruntMaterielRetour.Clear();
-            txtIdEmpruntMaterielSupp.Clear();
-            txtListeIdEmpruntMateriel.Clear();
+                if (string.IsNullOrWhiteSpace(saisie))
+                {
+                    MessageBox.Show("Entre un IdEmpruntMateriel.");
+                    return;
+                }
 
-            dtpDatePret.Value = DateTime.Today;
-            dtpRetourPrevu.Value = DateTime.Today.AddDays(14);
-            dtpRetourReel.Value = DateTime.Today;
+                if (!int.TryParse(saisie, out int id))
+                {
+                    MessageBox.Show("IdEmpruntMateriel invalide (nombre uniquement).");
+                    return;
+                }
 
-            if (cmbUsager.Items.Count > 0) cmbUsager.SelectedIndex = 0;
-            if (cmbMateriel.Items.Count > 0) cmbMateriel.SelectedIndex = 0;
-            if (cmbEtat.Items.Count > 0) cmbEtat.SelectedIndex = 0;
+                var data = _db.EmpruntsMateriel
+                    .Include(e => e.Usager)
+                    .Include(e => e.Materiel)
+                    .Where(e => e.EmpruntMaterielId == id)
+                    .Select(e => new
+                    {
+                        e.EmpruntMaterielId,
+                        e.MaterielId,
+                        Materiel = e.Materiel != null ? e.Materiel.Nom : "",
+                        e.UsagerId,
+                        Usager = e.Usager != null ? (e.Usager.Nom + " " + e.Usager.Prenom) : "",
+                        DateEmprunt = e.DateEmprunt,
+                        DateRetourPrevue = e.DateRetourPrevue,
+                        DateRetour = e.DateRetour,
+                        e.Etat
+                    })
+                    .ToList();
+
+                if (data.Count == 0)
+                {
+                    MessageBox.Show("Aucun emprunt matériel trouvé avec cet Id.");
+                    return;
+                }
+
+                dgvEmpruntMateriel.DataSource = null;
+                dgvEmpruntMateriel.DataSource = data;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Erreur recherche :\n\n" + ex.Message);
+            }
         }
 
         // =========================
@@ -279,34 +344,6 @@ namespace TP3_BD
         }
 
         // =========================
-        // RECHERCHER par IdEmpruntMateriel
-        // =========================
-        private void btnRechercher_Click(object sender, EventArgs e)
-        {
-            try
-            {
-                if (!int.TryParse(txtListeIdEmpruntMateriel.Text.Trim(), out int id))
-                {
-                    MessageBox.Show("Entre un IdEmpruntMateriel valide.");
-                    return;
-                }
-
-                var data = _db.EmpruntsMateriel
-                    .Include(e => e.Usager)
-                    .Include(e => e.Materiel)
-                    .Where(e => e.EmpruntMaterielId == id)
-                    .ToList();
-
-                dgvEmpruntMateriel.DataSource = null;
-                dgvEmpruntMateriel.DataSource = data;
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("Erreur recherche :\n\n" + ex.Message);
-            }
-        }
-
-        // =========================
         // CLIQUE GRILLE -> remplir champs
         // =========================
         private void dgvEmpruntMateriel_CellClick(object? sender, DataGridViewCellEventArgs e)
@@ -315,31 +352,65 @@ namespace TP3_BD
             {
                 if (e.RowIndex < 0) return;
 
-                if (dgvEmpruntMateriel.Rows[e.RowIndex].DataBoundItem is EmpruntMateriel emp)
-                {
-                    txtIdEmpruntMaterielRetour.Text = emp.EmpruntMaterielId.ToString();
-                    txtIdEmpruntMaterielSupp.Text = emp.EmpruntMaterielId.ToString();
+                var row = dgvEmpruntMateriel.Rows[e.RowIndex];
+                if (row == null) return;
 
-                    cmbUsager.SelectedValue = emp.UsagerId;
-                    cmbMateriel.SelectedValue = emp.MaterielId;
+                // Id pour Retour/Supp
+                txtIdEmpruntMaterielRetour.Text = row.Cells["EmpruntMaterielId"].Value?.ToString();
+                txtIdEmpruntMaterielSupp.Text = row.Cells["EmpruntMaterielId"].Value?.ToString();
 
-                    dtpDatePret.Value = emp.DateEmprunt;
-                    dtpRetourPrevu.Value = emp.DateRetourPrevue;
-                    dtpRetourReel.Value = emp.DateRetour ?? DateTime.Today;
+                // Combos
+                if (row.Cells["UsagerId"].Value != null)
+                    cmbUsager.SelectedValue = Convert.ToInt32(row.Cells["UsagerId"].Value);
 
-                    // Etat
-                    if (!string.IsNullOrWhiteSpace(emp.Etat))
-                        cmbEtat.Text = emp.Etat;
-                }
+                if (row.Cells["MaterielId"].Value != null)
+                    cmbMateriel.SelectedValue = Convert.ToInt32(row.Cells["MaterielId"].Value);
+
+                // Dates
+                if (row.Cells["DateEmprunt"].Value != null)
+                    dtpDatePret.Value = Convert.ToDateTime(row.Cells["DateEmprunt"].Value);
+
+                if (row.Cells["DateRetourPrevue"].Value != null)
+                    dtpRetourPrevu.Value = Convert.ToDateTime(row.Cells["DateRetourPrevue"].Value);
+
+                if (row.Cells["DateRetour"].Value != null && row.Cells["DateRetour"].Value != DBNull.Value)
+                    dtpRetourReel.Value = Convert.ToDateTime(row.Cells["DateRetour"].Value);
+                else
+                    dtpRetourReel.Value = DateTime.Today;
+
+                // Etat
+                var etat = row.Cells["Etat"].Value?.ToString();
+                if (!string.IsNullOrWhiteSpace(etat))
+                    cmbEtat.Text = etat;
             }
             catch
             {
-                // rien : on évite crash sur un clic
+                // éviter crash sur clic
             }
         }
 
         // =========================
-        // RETOUR MENU
+        // VIDER
+        // =========================
+        private void btnVider_Click(object sender, EventArgs e) => ViderChamps();
+
+        private void ViderChamps()
+        {
+            txtIdEmpruntMaterielRetour.Clear();
+            txtIdEmpruntMaterielSupp.Clear();
+            txtListeIdEmpruntMateriel.Clear();
+
+            dtpDatePret.Value = DateTime.Today;
+            dtpRetourPrevu.Value = DateTime.Today.AddDays(14);
+            dtpRetourReel.Value = DateTime.Today;
+
+            if (cmbUsager.Items.Count > 0) cmbUsager.SelectedIndex = 0;
+            if (cmbMateriel.Items.Count > 0) cmbMateriel.SelectedIndex = 0;
+            if (cmbEtat.Items.Count > 0) cmbEtat.SelectedIndex = 0;
+        }
+
+        // =========================
+        // RETOUR
         // =========================
         private void btnRetour_Click(object sender, EventArgs e)
         {

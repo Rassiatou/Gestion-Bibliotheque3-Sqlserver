@@ -48,6 +48,8 @@
             lbCommentaireModif = new Label();
             txtCommentaireModif = new TextBox();
             nudNoteModif = new NumericUpDown();
+            lbNote = new Label();
+            lbNoteModif = new Label();
             ((System.ComponentModel.ISupportInitialize)dgvEvaluation).BeginInit();
             ((System.ComponentModel.ISupportInitialize)nudNote).BeginInit();
             ((System.ComponentModel.ISupportInitialize)nudNoteModif).BeginInit();
@@ -55,7 +57,7 @@
             // 
             // dtpDateEvaluation
             // 
-            dtpDateEvaluation.Location = new Point(849, 12);
+            dtpDateEvaluation.Location = new Point(935, 12);
             dtpDateEvaluation.Name = "dtpDateEvaluation";
             dtpDateEvaluation.Size = new Size(167, 23);
             dtpDateEvaluation.TabIndex = 263;
@@ -185,14 +187,14 @@
             // 
             // nudNote
             // 
-            nudNote.Location = new Point(460, 12);
+            nudNote.Location = new Point(518, 11);
             nudNote.Name = "nudNote";
             nudNote.Size = new Size(120, 23);
             nudNote.TabIndex = 265;
             // 
             // txtCommentaire
             // 
-            txtCommentaire.Location = new Point(725, 12);
+            txtCommentaire.Location = new Point(786, 11);
             txtCommentaire.Multiline = true;
             txtCommentaire.Name = "txtCommentaire";
             txtCommentaire.Size = new Size(100, 23);
@@ -201,7 +203,7 @@
             // lbCommentaire
             // 
             lbCommentaire.AutoSize = true;
-            lbCommentaire.Location = new Point(635, 16);
+            lbCommentaire.Location = new Point(688, 15);
             lbCommentaire.Name = "lbCommentaire";
             lbCommentaire.Size = new Size(80, 15);
             lbCommentaire.TabIndex = 267;
@@ -210,7 +212,7 @@
             // lbCommentaireModif
             // 
             lbCommentaireModif.AutoSize = true;
-            lbCommentaireModif.Location = new Point(518, 62);
+            lbCommentaireModif.Location = new Point(607, 64);
             lbCommentaireModif.Name = "lbCommentaireModif";
             lbCommentaireModif.Size = new Size(80, 15);
             lbCommentaireModif.TabIndex = 270;
@@ -218,7 +220,7 @@
             // 
             // txtCommentaireModif
             // 
-            txtCommentaireModif.Location = new Point(608, 58);
+            txtCommentaireModif.Location = new Point(710, 58);
             txtCommentaireModif.Multiline = true;
             txtCommentaireModif.Name = "txtCommentaireModif";
             txtCommentaireModif.Size = new Size(100, 23);
@@ -226,16 +228,36 @@
             // 
             // nudNoteModif
             // 
-            nudNoteModif.Location = new Point(343, 58);
+            nudNoteModif.Location = new Point(423, 58);
             nudNoteModif.Name = "nudNoteModif";
             nudNoteModif.Size = new Size(120, 23);
             nudNoteModif.TabIndex = 268;
+            // 
+            // lbNote
+            // 
+            lbNote.AutoSize = true;
+            lbNote.Location = new Point(460, 15);
+            lbNote.Name = "lbNote";
+            lbNote.Size = new Size(33, 15);
+            lbNote.TabIndex = 271;
+            lbNote.Text = "Note";
+            // 
+            // lbNoteModif
+            // 
+            lbNoteModif.AutoSize = true;
+            lbNoteModif.Location = new Point(359, 64);
+            lbNoteModif.Name = "lbNoteModif";
+            lbNoteModif.Size = new Size(33, 15);
+            lbNoteModif.TabIndex = 272;
+            lbNoteModif.Text = "Note";
             // 
             // EvaluationForm1
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(1041, 493);
+            ClientSize = new Size(1235, 493);
+            Controls.Add(lbNoteModif);
+            Controls.Add(lbNote);
             Controls.Add(lbCommentaireModif);
             Controls.Add(txtCommentaireModif);
             Controls.Add(nudNoteModif);
@@ -286,5 +308,7 @@
         private Label lbCommentaireModif;
         private TextBox txtCommentaireModif;
         private NumericUpDown nudNoteModif;
+        private Label lbNote;
+        private Label lbNoteModif;
     }
 }

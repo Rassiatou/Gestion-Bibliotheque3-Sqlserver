@@ -13,9 +13,6 @@ namespace TP3_BD.Entities
         public bool Actif { get; set; } 
         public string TypeUsager { get; set; }
 
-        // optionnel (utile souvent)
-        public string Email { get; set; } = "";
-
         // "Actif", "Suspendu", etc. (selon ton TP)
         public string Statut { get; set; } = "Actif";
 

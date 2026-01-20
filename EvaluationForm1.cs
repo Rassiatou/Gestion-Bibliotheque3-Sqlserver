@@ -1,4 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using System;
+using System.Linq;
+using System.Windows.Forms;
 using TP3_BD.Data;
 using TP3_BD.Entities;
 
@@ -12,8 +15,11 @@ namespace TP3_BD
         {
             InitializeComponent();
             this.Load += EvaluationForm1_Load;
-        }
 
+            // Important : si pas branché dans Designer
+            dgvEvaluation.CellClick -= dgvEvaluation_CellClick;
+            dgvEvaluation.CellClick += dgvEvaluation_CellClick;
+        }
 
         // =========================
         // LOAD FORM
@@ -33,42 +39,78 @@ namespace TP3_BD
         }
 
         // =========================
-        // CHARGER COMBOS (Usager + Livre)
+        // CHARGER COMBOS (Usager + Livre)  Nom complet / Titre
         // =========================
         private void ChargerCombos()
         {
-            // --- Combo Usager ---
-            cmbUsager.DisplayMember = "Nom";
-            cmbUsager.ValueMember = "UsagerId";
-            cmbUsager.DataSource = _db.Usagers
-                .OrderBy(u => u.Nom)
+            // --- Combo Usager : Nom + Prenom ---
+            var usagers = _db.Usagers
+                .Select(u => new
+                {
+                    u.UsagerId,
+                    NomComplet = (u.Nom + " " + u.Prenom).Trim()
+                })
+                .OrderBy(x => x.NomComplet)
                 .ToList();
 
-            // --- Combo Livre ---
+            cmbUsager.DisplayMember = "NomComplet";
+            cmbUsager.ValueMember = "UsagerId";
+            cmbUsager.DataSource = usagers;
+
+            // --- Combo Livre : Titre ---
+            var livres = _db.Livres
+                .Select(l => new
+                {
+                    l.LivreId,
+                    l.Titre
+                })
+                .OrderBy(x => x.Titre)
+                .ToList();
+
             cmbLivre.DisplayMember = "Titre";
             cmbLivre.ValueMember = "LivreId";
-            cmbLivre.DataSource = _db.Livres
-                .OrderBy(l => l.Titre)
-                .ToList();
+            cmbLivre.DataSource = livres;
+
+            if (cmbUsager.Items.Count > 0) cmbUsager.SelectedIndex = 0;
+            if (cmbLivre.Items.Count > 0) cmbLivre.SelectedIndex = 0;
         }
 
         // =========================
-        // CHARGER GRILLE
+        // CHARGER GRILLE Affiche Nom usager + Titre livre
         // =========================
         private void ChargerGrille()
         {
-            dgvEvaluation.DataSource = null;
+            try
+            {
+                dgvEvaluation.DataSource = null;
 
-            dgvEvaluation.DataSource = _db.Evaluations
-                .Include(e => e.Usager)
-                .Include(e => e.Livre)
-                .OrderByDescending(e => e.DateEvaluation)
-                .ToList();
+                var data = _db.Evaluations
+                    .Include(e => e.Usager)
+                    .Include(e => e.Livre)
+                    .OrderByDescending(e => e.DateEvaluation)
+                    .Select(e => new
+                    {
+                        e.EvaluationId,
+                        e.LivreId,
+                        Livre = e.Livre != null ? e.Livre.Titre : "",
+                        e.UsagerId,
+                        Usager = e.Usager != null ? (e.Usager.Nom + " " + e.Usager.Prenom).Trim() : "",
+                        e.Note,
+                        e.Commentaire,
+                        e.DateEvaluation
+                    })
+                    .ToList();
 
-            dgvEvaluation.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
-            dgvEvaluation.ReadOnly = true;
-            dgvEvaluation.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-            dgvEvaluation.MultiSelect = false;
+                dgvEvaluation.DataSource = data;
+                dgvEvaluation.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
+                dgvEvaluation.ReadOnly = true;
+                dgvEvaluation.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+                dgvEvaluation.MultiSelect = false;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Erreur (chargement grille) :\n\n" + ex.Message);
+            }
         }
 
         // =========================
@@ -78,7 +120,6 @@ namespace TP3_BD
         {
             try
             {
-                // 1) Valider champs
                 if (!ValiderAjout()) return;
 
                 int usagerId = (int)cmbUsager.SelectedValue;
@@ -93,19 +134,16 @@ namespace TP3_BD
                     DateEvaluation = dtpDateEvaluation.Value.Date
                 };
 
-                // 2) Save
                 _db.Evaluations.Add(eval);
                 _db.SaveChanges();
 
-                MessageBox.Show("Évaluation ajoutée ✅");
-
-                // 3) Refresh
+                MessageBox.Show("Évaluation ajoutée");
                 ChargerGrille();
                 ViderChamps();
             }
             catch (DbUpdateException dbEx)
             {
-                MessageBox.Show("Erreur BD (Ajout) :\n\n" + dbEx.Message);
+                MessageBox.Show("Erreur BD (Ajout) :\n\n" + (dbEx.InnerException?.Message ?? dbEx.Message));
             }
             catch (Exception ex)
             {
@@ -143,14 +181,12 @@ namespace TP3_BD
         {
             try
             {
-                // 1) Valider Id
                 if (!int.TryParse(txtIdEvaluation.Text.Trim(), out int id))
                 {
                     MessageBox.Show("IdEvaluation invalide (modification).");
                     return;
                 }
 
-                // 2) Charger l'évaluation
                 var eval = _db.Evaluations.FirstOrDefault(e => e.EvaluationId == id);
                 if (eval == null)
                 {
@@ -158,7 +194,6 @@ namespace TP3_BD
                     return;
                 }
 
-                // 3) Valider les champs modif
                 if (nudNoteModif.Value < 0 || nudNoteModif.Value > 10)
                 {
                     MessageBox.Show("La note (modif) doit être entre 0 et 10.");
@@ -171,23 +206,18 @@ namespace TP3_BD
                     return;
                 }
 
-                // 4) Appliquer modifs
                 eval.Note = (int)nudNoteModif.Value;
                 eval.Commentaire = txtCommentaireModif.Text.Trim();
 
-                // (Option) si tu veux permettre de modifier la date aussi :
-                // eval.DateEvaluation = dtpDateEvaluation.Value.Date;
-
                 _db.SaveChanges();
 
-                MessageBox.Show("Évaluation modifiée ✅");
-
+                MessageBox.Show("Évaluation modifiée");
                 ChargerGrille();
                 ViderChamps();
             }
             catch (DbUpdateException dbEx)
             {
-                MessageBox.Show("Erreur BD (Modification) :\n\n" + dbEx.Message);
+                MessageBox.Show("Erreur BD (Modification) :\n\n" + (dbEx.InnerException?.Message ?? dbEx.Message));
             }
             catch (Exception ex)
             {
@@ -227,14 +257,13 @@ namespace TP3_BD
                 _db.Evaluations.Remove(eval);
                 _db.SaveChanges();
 
-                MessageBox.Show("Évaluation supprimée ✅");
-
+                MessageBox.Show("Évaluation supprimée");
                 ChargerGrille();
                 ViderChamps();
             }
             catch (DbUpdateException dbEx)
             {
-                MessageBox.Show("Erreur BD (Suppression) :\n\n" + dbEx.Message);
+                MessageBox.Show("Erreur BD (Suppression) :\n\n" + (dbEx.InnerException?.Message ?? dbEx.Message));
             }
             catch (Exception ex)
             {
@@ -245,27 +274,20 @@ namespace TP3_BD
         // =========================
         // VIDER
         // =========================
-        private void btnVider_Click(object sender, EventArgs e)
-        {
-            ViderChamps();
-        }
+        private void btnVider_Click(object sender, EventArgs e) => ViderChamps();
 
         private void ViderChamps()
         {
-            // Champs ajout
             txtCommentaire.Clear();
             nudNote.Value = 0;
             dtpDateEvaluation.Value = DateTime.Today;
 
-            // Champs modif
             txtIdEvaluation.Clear();
             txtCommentaireModif.Clear();
             nudNoteModif.Value = 0;
 
-            // Champs supp
             txtIdEvaluationSupp.Clear();
 
-            // Remettre combos au début
             if (cmbUsager.Items.Count > 0) cmbUsager.SelectedIndex = 0;
             if (cmbLivre.Items.Count > 0) cmbLivre.SelectedIndex = 0;
         }
@@ -287,7 +309,8 @@ namespace TP3_BD
         }
 
         // =========================
-        // CLIQUE SUR GRILLE -> Remplir champs Modif/Supp
+        // CLIQUE SUR GRILLE -> Remplir champs Modif/Supp 
+        // (Comme la grille affiche une projection, on lit les Cells)
         // =========================
         private void dgvEvaluation_CellClick(object? sender, DataGridViewCellEventArgs e)
         {
@@ -295,27 +318,35 @@ namespace TP3_BD
             {
                 if (e.RowIndex < 0) return;
 
-                if (dgvEvaluation.Rows[e.RowIndex].DataBoundItem is Evaluation eval)
-                {
-                    // Remplir champs modif
-                    txtIdEvaluation.Text = eval.EvaluationId.ToString();
-                    nudNoteModif.Value = eval.Note;
-                    txtCommentaireModif.Text = eval.Commentaire;
+                var row = dgvEvaluation.Rows[e.RowIndex];
+                if (row == null) return;
 
-                    // Remplir champs supp
-                    txtIdEvaluationSupp.Text = eval.EvaluationId.ToString();
+                // Colonnes de ChargerGrille()
+                txtIdEvaluation.Text = row.Cells["EvaluationId"].Value?.ToString();
+                txtIdEvaluationSupp.Text = row.Cells["EvaluationId"].Value?.ToString();
 
-                    // Remplir zone ajout (facultatif)
-                    cmbUsager.SelectedValue = eval.UsagerId;
-                    cmbLivre.SelectedValue = eval.LivreId;
-                    nudNote.Value = eval.Note;
-                    txtCommentaire.Text = eval.Commentaire;
-                    dtpDateEvaluation.Value = eval.DateEvaluation;
-                }
+                int note = 0;
+                int.TryParse(row.Cells["Note"].Value?.ToString(), out note);
+                nudNoteModif.Value = note;
+
+                txtCommentaireModif.Text = row.Cells["Commentaire"].Value?.ToString() ?? "";
+
+                // Remplir zone ajout (facultatif)
+                if (row.Cells["UsagerId"].Value != null)
+                    cmbUsager.SelectedValue = Convert.ToInt32(row.Cells["UsagerId"].Value);
+
+                if (row.Cells["LivreId"].Value != null)
+                    cmbLivre.SelectedValue = Convert.ToInt32(row.Cells["LivreId"].Value);
+
+                nudNote.Value = note;
+                txtCommentaire.Text = txtCommentaireModif.Text;
+
+                if (DateTime.TryParse(row.Cells["DateEvaluation"].Value?.ToString(), out var d))
+                    dtpDateEvaluation.Value = d;
             }
             catch
             {
-                // Eviter crash sur un clic
+              
             }
         }
 

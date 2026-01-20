@@ -25,8 +25,10 @@ namespace TP3_BD.Data
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             optionsBuilder.UseSqlServer(
-                "Server=.;Database=BiblioDB;Trusted_Connection=True;TrustServerCertificate=True");
+                @"Server=(localdb)\MSSQLLocalDB;Database=BiblioDB;Trusted_Connection=True;TrustServerCertificate=True"
+            );
         }
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -80,7 +82,7 @@ namespace TP3_BD.Data
                 .WithMany(u => u.Participations)
                 .HasForeignKey(p => p.UsagerId)
                 .OnDelete(DeleteBehavior.Restrict);
-            // ✅ IMPORTANT : empêcher qu’un même usager soit inscrit 2 fois à la même activité
+            // IMPORTANT : empêcher qu’un même usager soit inscrit 2 fois à la même activité
             modelBuilder.Entity<Participation>()
                 .HasIndex(p => new { p.ActiviteId, p.UsagerId })
                 .IsUnique();

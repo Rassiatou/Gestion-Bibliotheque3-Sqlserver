@@ -16,32 +16,46 @@ namespace TP3_BD
             InitializeComponent();
             this.Load += ActiviteForm1_Load;
 
-            // Optionnel : brancher le click si pas fait dans le designer
+            // Important : éviter double abonnement
+            dgvActivite.CellClick -= dgvActivite_CellClick;
             dgvActivite.CellClick += dgvActivite_CellClick;
         }
 
-        // ==========================
-        // AU CHARGEMENT DU FORM
-        // ==========================
         private void ActiviteForm1_Load(object? sender, EventArgs e)
         {
             try
             {
                 ChargerCombos();
                 ChargerGrille();
+                ViderChamps();
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Erreur chargement form : " + ex.Message);
+                MessageBox.Show("Erreur au chargement : " + ex.Message);
             }
         }
 
-        // ==========================
+        // =========================
+        // AIDE : lire un TextBox par nom (sans casser si le champ n'existe pas)
+        // =========================
+        private string LireTexte(params string[] nomsPossibles)
+        {
+            foreach (var nom in nomsPossibles)
+            {
+                // chercher dans tous les contrôles (true = recherche récursive)
+                var ctrls = this.Controls.Find(nom, true);
+                if (ctrls != null && ctrls.Length > 0 && ctrls[0] is TextBox tb)
+                    return tb.Text.Trim();
+            }
+            return string.Empty;
+        }
+
+        // =========================
         // COMBOS
-        // ==========================
+        // =========================
         private void ChargerCombos()
         {
-            // 1) Types (si tu ne les as pas mis dans le designer)
+            // Types
             if (cmbTypeActivite.Items.Count == 0)
             {
                 cmbTypeActivite.Items.Add("Évènement");
@@ -56,7 +70,7 @@ namespace TP3_BD
                 cmbModifTypeActivite.SelectedIndex = 0;
             }
 
-            // 2) Organisateur = Employés
+            // Organisateur = Employés (Nom + Prenom)
             var employes = _db.Employes
                 .Select(e => new
                 {
@@ -72,36 +86,54 @@ namespace TP3_BD
 
             cmbModifOrganisateur.DisplayMember = "NomComplet";
             cmbModifOrganisateur.ValueMember = "EmployeId";
-            cmbModifOrganisateur.DataSource = employes.ToList(); // copie
+            cmbModifOrganisateur.DataSource = employes.ToList();
         }
 
-        // ==========================
-        // CHARGER GRILLE
-        // ==========================
+        // =========================
+        // GRILLE (afficher nom organisateur)
+        // =========================
         private void ChargerGrille()
         {
             dgvActivite.DataSource = null;
 
-            dgvActivite.DataSource = _db.Activites
+            var data = _db.Activites
                 .Include(a => a.Organisateur)
                 .OrderBy(a => a.Date)
+                .Select(a => new
+                {
+                    a.ActiviteId,
+                    a.Titre,
+                    a.Type,
+                    a.Date,
+                    a.CapaciteMax,
+                    a.OrganisateurId,
+                    Organisateur = (a.Organisateur.Nom + " " + a.Organisateur.Prenom)
+                })
                 .ToList();
 
+            dgvActivite.DataSource = data;
             dgvActivite.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
+            dgvActivite.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+            dgvActivite.ReadOnly = true;
+            dgvActivite.MultiSelect = false;
         }
 
-        // ==========================
+        // =========================
         // AJOUTER
-        // ==========================
+        // =========================
         private void btnAjouter_Click(object sender, EventArgs e)
         {
             try
             {
-                if (!ValiderAjout()) return;
+                // On lit ton champ EXACT : txtTitreActivite
+                // + fallback au cas où ton designer l'a nommé txtTitre
+                string titre = LireTexte("txtTitreActivite", "txtTitre");
+
+                if (!ValiderAjout(titre)) return;
 
                 var activite = new Activite
                 {
-                    Titre = txtTitreActivite.Text.Trim(),
+                    Titre = titre,
                     Type = cmbTypeActivite.Text.Trim(),
                     Date = dtpDateActivite.Value.Date,
                     CapaciteMax = (int)nudCapaciteMax.Value,
@@ -113,33 +145,45 @@ namespace TP3_BD
 
                 ChargerGrille();
                 ViderChamps();
-
-                MessageBox.Show("Activité ajoutée ✅");
+                MessageBox.Show("Activité ajoutée ");
             }
             catch (DbUpdateException ex)
             {
-                MessageBox.Show("Erreur BD (ajout) : " + ex.InnerException?.Message ?? ex.Message);
+                MessageBox.Show("Erreur BD (ajout) : " + (ex.InnerException?.Message ?? ex.Message));
             }
             catch (Exception ex)
             {
                 MessageBox.Show("Erreur (ajout) : " + ex.Message);
             }
+
         }
 
-        // ==========================
+          
+
+        // =========================
         // MODIFIER
-        // ==========================
+        // =========================
         private void btnModifier_Click(object sender, EventArgs e)
         {
             try
             {
+                // ✅ Tu m'as donné ce champ : txtIdActiviteModif
                 if (!int.TryParse(txtIdActiviteModif.Text.Trim(), out int id))
                 {
-                    MessageBox.Show("Sélectionne une activité dans la liste.");
+                    MessageBox.Show("Sélectionne une activité à modifier (clique dans la liste).");
                     return;
                 }
 
-                if (!ValiderModif()) return;
+                // On récupère le titre modif (selon tes champs possibles)
+                // (si ton textbox modif s'appelle autrement, il sera trouvé)
+                string titreModif = LireTexte(
+                    "txtModifTitreActivite",
+                    "txtTitreActiviteModif",
+                    "txtTitreModif",
+                    "txtTitreModifActivite"
+                );
+
+                if (!ValiderModif(titreModif)) return;
 
                 var activite = _db.Activites.FirstOrDefault(a => a.ActiviteId == id);
                 if (activite == null)
@@ -148,7 +192,7 @@ namespace TP3_BD
                     return;
                 }
 
-                activite.Titre = txtModifTitreActivite.Text.Trim();
+                activite.Titre = titreModif;
                 activite.Type = cmbModifTypeActivite.Text.Trim();
                 activite.Date = dtpModifDateActivite.Value.Date;
                 activite.CapaciteMax = (int)nudModifCapaciteMax.Value;
@@ -158,12 +202,11 @@ namespace TP3_BD
 
                 ChargerGrille();
                 ViderChamps();
-
-                MessageBox.Show("Activité modifiée ✅");
+                MessageBox.Show("Activité modifiée");
             }
             catch (DbUpdateException ex)
             {
-                MessageBox.Show("Erreur BD (modif) : " + ex.InnerException?.Message ?? ex.Message);
+                MessageBox.Show("Erreur BD (modif) : " + (ex.InnerException?.Message ?? ex.Message));
             }
             catch (Exception ex)
             {
@@ -171,16 +214,17 @@ namespace TP3_BD
             }
         }
 
-        // ==========================
+        // =========================
         // SUPPRIMER
-        // ==========================
+        // =========================
         private void btnSupprimer_Click(object sender, EventArgs e)
         {
             try
             {
+                // ✅ Tu m'as donné ce champ : txtIdActiviteSupp
                 if (!int.TryParse(txtIdActiviteSupp.Text.Trim(), out int id))
                 {
-                    MessageBox.Show("Sélectionne une activité dans la liste.");
+                    MessageBox.Show("Sélectionne une activité à supprimer.");
                     return;
                 }
 
@@ -194,18 +238,14 @@ namespace TP3_BD
                     return;
                 }
 
-                // ✅ Empêche suppression si participations (FK Restrict)
                 if (activite.Participations != null && activite.Participations.Any())
                 {
                     MessageBox.Show("Suppression impossible : cette activité a des participations.");
                     return;
                 }
 
-                var confirm = MessageBox.Show(
-                    "Supprimer cette activité ?",
-                    "Confirmation",
-                    MessageBoxButtons.YesNo,
-                    MessageBoxIcon.Warning);
+                var confirm = MessageBox.Show("Supprimer cette activité ?", "Confirmation",
+                    MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
 
                 if (confirm != DialogResult.Yes) return;
 
@@ -214,12 +254,7 @@ namespace TP3_BD
 
                 ChargerGrille();
                 ViderChamps();
-
-                MessageBox.Show("Activité supprimée ✅");
-            }
-            catch (DbUpdateException ex)
-            {
-                MessageBox.Show("Erreur BD (suppression) : " + ex.InnerException?.Message ?? ex.Message);
+                MessageBox.Show("Activité supprimée");
             }
             catch (Exception ex)
             {
@@ -227,10 +262,9 @@ namespace TP3_BD
             }
         }
 
-        // ==========================
-        // RECHERCHER (par IdActivite)
-        // txtListeIdActivite
-        // ==========================
+        // =========================
+        // RECHERCHER
+        // =========================
         private void btnRechercher_Click(object sender, EventArgs e)
         {
             try
@@ -241,18 +275,26 @@ namespace TP3_BD
                     return;
                 }
 
-                var activite = _db.Activites
+                var data = _db.Activites
                     .Include(a => a.Organisateur)
-                    .FirstOrDefault(a => a.ActiviteId == id);
-
-                if (activite == null)
-                {
-                    MessageBox.Show("Aucune activité trouvée avec cet IdActivite.");
-                    return;
-                }
+                    .Where(a => a.ActiviteId == id)
+                    .Select(a => new
+                    {
+                        a.ActiviteId,
+                        a.Titre,
+                        a.Type,
+                        a.Date,
+                        a.CapaciteMax,
+                        a.OrganisateurId,
+                        Organisateur = (a.Organisateur.Nom + " " + a.Organisateur.Prenom)
+                    })
+                    .ToList();
 
                 dgvActivite.DataSource = null;
-                dgvActivite.DataSource = new[] { activite }.ToList();
+                dgvActivite.DataSource = data;
+
+                if (data.Count == 0)
+                    MessageBox.Show("Aucune activité trouvée avec cet IdActivite.");
             }
             catch (Exception ex)
             {
@@ -260,97 +302,63 @@ namespace TP3_BD
             }
         }
 
-        // ==========================
-        // ACTUALISER
-        // ==========================
-        private void btnActualiser_Click(object sender, EventArgs e)
-        {
-            ChargerGrille();
-        }
+        private void btnActualiser_Click(object sender, EventArgs e) => ChargerGrille();
 
-        // ==========================
-        // VIDER
-        // ==========================
-        private void btnVider_Click(object sender, EventArgs e)
-        {
-            ViderChamps();
-        }
+        private void btnVider_Click(object sender, EventArgs e) => ViderChamps();
 
-        private void ViderChamps()
-        {
-            // Ajout
-            txtTitreActivite.Clear();
-            dtpDateActivite.Value = DateTime.Today;
-            nudCapaciteMax.Value = 0;
-            if (cmbTypeActivite.Items.Count > 0) cmbTypeActivite.SelectedIndex = 0;
-            if (cmbEmployeOrganisateur.Items.Count > 0) cmbEmployeOrganisateur.SelectedIndex = 0;
+        private void btnRetour_Click(object sender, EventArgs e) => this.Close();
 
-            // Modif
-            txtIdActiviteModif.Clear();
-            txtModifTitreActivite.Clear();
-            dtpModifDateActivite.Value = DateTime.Today;
-            nudModifCapaciteMax.Value = 0;
-            if (cmbModifTypeActivite.Items.Count > 0) cmbModifTypeActivite.SelectedIndex = 0;
-            if (cmbModifOrganisateur.Items.Count > 0) cmbModifOrganisateur.SelectedIndex = 0;
-
-            // Supp
-            txtIdActiviteSupp.Clear();
-
-            // Recherche
-            txtListeIdActivite.Clear();
-        }
-
-        // ==========================
-        // RETOUR
-        // ==========================
-        private void btnRetour_Click(object sender, EventArgs e)
-        {
-            this.Close();
-        }
-
-        // ==========================
-        // CLICK GRILLE => remplir zones Modif + Supp
-        // ==========================
-        private void dgvActivite_CellClick(object sender, DataGridViewCellEventArgs e)
+        // =========================
+        // CELLCLICK (grille en Select new => lire par colonnes)
+        // =========================
+        private void dgvActivite_CellClick(object? sender, DataGridViewCellEventArgs e)
         {
             try
             {
                 if (e.RowIndex < 0) return;
 
-                if (dgvActivite.Rows[e.RowIndex].DataBoundItem is Activite a)
-                {
-                    // Remplir Supp
-                    txtIdActiviteSupp.Text = a.ActiviteId.ToString();
+                var row = dgvActivite.Rows[e.RowIndex];
+                if (row == null) return;
 
-                    // Remplir Modif
-                    txtIdActiviteModif.Text = a.ActiviteId.ToString();
-                    txtModifTitreActivite.Text = a.Titre;
-                    cmbModifTypeActivite.Text = a.Type;
-                    dtpModifDateActivite.Value = a.Date;
-                    nudModifCapaciteMax.Value = a.CapaciteMax;
-                    cmbModifOrganisateur.SelectedValue = a.OrganisateurId;
-                }
+                // Colonnes selon ChargerGrille()
+                // 0 ActiviteId, 1 Titre, 2 Type, 3 Date, 4 CapaciteMax, 5 OrganisateurId, 6 Organisateur
+                string id = row.Cells[0].Value?.ToString() ?? "";
+
+                txtIdActiviteModif.Text = id;
+                txtIdActiviteSupp.Text = id;
+
+                // Remplir le textbox modif titre si on le trouve
+                var tbModif = this.Controls.Find("txtModifTitreActivite", true).FirstOrDefault() as TextBox
+                              ?? this.Controls.Find("txtTitreActiviteModif", true).FirstOrDefault() as TextBox
+                              ?? this.Controls.Find("txtTitreModif", true).FirstOrDefault() as TextBox
+                              ?? this.Controls.Find("txtTitreModifActivite", true).FirstOrDefault() as TextBox;
+
+                if (tbModif != null) tbModif.Text = row.Cells[1].Value?.ToString() ?? "";
+
+                cmbModifTypeActivite.Text = row.Cells[2].Value?.ToString() ?? "";
+                if (DateTime.TryParse(row.Cells[3].Value?.ToString(), out DateTime d))
+                    dtpModifDateActivite.Value = d;
+
+                if (int.TryParse(row.Cells[4].Value?.ToString(), out int cap))
+                    nudModifCapaciteMax.Value = cap;
+
+                if (int.TryParse(row.Cells[5].Value?.ToString(), out int orgId))
+                    cmbModifOrganisateur.SelectedValue = orgId;
             }
-            catch (Exception ex)
+            catch
             {
-                MessageBox.Show("Erreur sélection : " + ex.Message);
+                // ne pas casser l'app pour un clic
             }
         }
 
-        // ==========================
+        // =========================
         // VALIDATIONS
-        // ==========================
-        private bool ValiderAjout()
+        // =========================
+        private bool ValiderAjout(string titre)
         {
-            if (string.IsNullOrWhiteSpace(txtTitreActivite.Text))
+            if (string.IsNullOrWhiteSpace(titre))
             {
                 MessageBox.Show("Titre obligatoire.");
-                return false;
-            }
-
-            if (cmbTypeActivite.SelectedItem == null && string.IsNullOrWhiteSpace(cmbTypeActivite.Text))
-            {
-                MessageBox.Show("Choisis un type (Évènement/Concours).");
                 return false;
             }
 
@@ -369,9 +377,9 @@ namespace TP3_BD
             return true;
         }
 
-        private bool ValiderModif()
+        private bool ValiderModif(string titre)
         {
-            if (string.IsNullOrWhiteSpace(txtModifTitreActivite.Text))
+            if (string.IsNullOrWhiteSpace(titre))
             {
                 MessageBox.Show("Titre obligatoire (modification).");
                 return false;
@@ -390,6 +398,34 @@ namespace TP3_BD
             }
 
             return true;
+        }
+
+        private void ViderChamps()
+        {
+            // Ajout : ton champ confirmé
+            txtTitreActivite.Clear();
+            dtpDateActivite.Value = DateTime.Today;
+            nudCapaciteMax.Value = 0;
+            if (cmbTypeActivite.Items.Count > 0) cmbTypeActivite.SelectedIndex = 0;
+            if (cmbEmployeOrganisateur.Items.Count > 0) cmbEmployeOrganisateur.SelectedIndex = 0;
+
+            // Modif
+            txtIdActiviteModif.Clear();
+            dtpModifDateActivite.Value = DateTime.Today;
+            nudModifCapaciteMax.Value = 0;
+            if (cmbModifTypeActivite.Items.Count > 0) cmbModifTypeActivite.SelectedIndex = 0;
+            if (cmbModifOrganisateur.Items.Count > 0) cmbModifOrganisateur.SelectedIndex = 0;
+
+            // vider textbox modif titre si trouvé
+            var tbModif = this.Controls.Find("txtModifTitreActivite", true).FirstOrDefault() as TextBox
+                          ?? this.Controls.Find("txtTitreActiviteModif", true).FirstOrDefault() as TextBox
+                          ?? this.Controls.Find("txtTitreModif", true).FirstOrDefault() as TextBox
+                          ?? this.Controls.Find("txtTitreModifActivite", true).FirstOrDefault() as TextBox;
+            if (tbModif != null) tbModif.Clear();
+
+            // Supp + Recherche
+            txtIdActiviteSupp.Clear();
+            txtListeIdActivite.Clear();
         }
     }
 }

@@ -237,7 +237,6 @@
             txtListeIdCategorie.Name = "txtListeIdCategorie";
             txtListeIdCategorie.Size = new Size(114, 27);
             txtListeIdCategorie.TabIndex = 122;
-            txtListeIdCategorie.TextChanged += txtListeIdCategorie_TextChanged;
             // 
             // btnSupprimer
             // 

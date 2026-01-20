@@ -1,4 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using System;
+using System.Linq;
+using System.Windows.Forms;
 using TP3_BD.Data;
 using TP3_BD.Entities;
 
@@ -12,6 +15,10 @@ namespace TP3_BD
         {
             InitializeComponent();
             this.Load += ParticipationForm1_Load;
+
+            // important: si pas branché dans designer
+            dgvParticipation.CellClick -= dgvParticipation_CellClick;
+            dgvParticipation.CellClick += dgvParticipation_CellClick;
         }
 
         // =========================
@@ -32,38 +39,64 @@ namespace TP3_BD
         }
 
         // =========================
-        // COMBOS
+        // COMBOS (afficher des noms lisibles)
         // =========================
         private void ChargerCombos()
         {
-            // Usager
-            cmbUsager.DisplayMember = "Nom";
-            cmbUsager.ValueMember = "UsagerId";
-            cmbUsager.DataSource = _db.Usagers
+            // --- Usager : Nom + Prenom ---
+            var usagers = _db.Usagers
                 .OrderBy(u => u.Nom)
+                .ThenBy(u => u.Prenom)
+                .Select(u => new
+                {
+                    u.UsagerId,
+                    NomComplet = (u.Nom + " " + u.Prenom).Trim()
+                })
                 .ToList();
 
-            // Activite
+            cmbUsager.DataSource = usagers;
+            cmbUsager.DisplayMember = "NomComplet";
+            cmbUsager.ValueMember = "UsagerId";
+
+            // --- Activite : Titre ---
+            var activites = _db.Activites
+                .OrderBy(a => a.Titre)
+                .Select(a => new
+                {
+                    a.ActiviteId,
+                    a.Titre
+                })
+                .ToList();
+
+            cmbActivite.DataSource = activites;
             cmbActivite.DisplayMember = "Titre";
             cmbActivite.ValueMember = "ActiviteId";
-            cmbActivite.DataSource = _db.Activites
-                .OrderBy(a => a.Titre)
-                .ToList();
         }
 
         // =========================
-        // GRILLE
+        // GRILLE (afficher des textes)
         // =========================
         private void ChargerGrille()
         {
             dgvParticipation.DataSource = null;
 
-            dgvParticipation.DataSource = _db.Participations
+            var data = _db.Participations
                 .Include(p => p.Usager)
                 .Include(p => p.Activite)
                 .OrderByDescending(p => p.DateInscription)
+                .Select(p => new
+                {
+                    p.ParticipationId,
+                    p.ActiviteId,
+                    Activite = p.Activite != null ? p.Activite.Titre : "",
+                    p.UsagerId,
+                    Usager = p.Usager != null ? (p.Usager.Nom + " " + p.Usager.Prenom).Trim() : "",
+                    p.Presence,
+                    p.DateInscription
+                })
                 .ToList();
 
+            dgvParticipation.DataSource = data;
             dgvParticipation.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
             dgvParticipation.ReadOnly = true;
             dgvParticipation.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
@@ -79,11 +112,11 @@ namespace TP3_BD
             {
                 if (!ValiderAjout()) return;
 
-                int usagerId = (int)cmbUsager.SelectedValue;
-                int activiteId = (int)cmbActivite.SelectedValue;
+                int usagerId = Convert.ToInt32(cmbUsager.SelectedValue);
+                int activiteId = Convert.ToInt32(cmbActivite.SelectedValue);
                 DateTime date = dtpDateInscription.Value.Date;
 
-                // 1) Empêcher double inscription (même usager + même activité)
+                // Empêcher double inscription
                 bool deja = _db.Participations.Any(p => p.UsagerId == usagerId && p.ActiviteId == activiteId);
                 if (deja)
                 {
@@ -91,7 +124,6 @@ namespace TP3_BD
                     return;
                 }
 
-                // 2) Vérifier la capacité max si tu as CapaciteMax dans Activite
                 var activite = _db.Activites.FirstOrDefault(a => a.ActiviteId == activiteId);
                 if (activite == null)
                 {
@@ -99,7 +131,6 @@ namespace TP3_BD
                     return;
                 }
 
-                // Si ton entity Activite a CapaciteMax :
                 int nbInscrits = _db.Participations.Count(p => p.ActiviteId == activiteId);
                 if (activite.CapaciteMax > 0 && nbInscrits >= activite.CapaciteMax)
                 {
@@ -107,7 +138,6 @@ namespace TP3_BD
                     return;
                 }
 
-                // 3) Créer participation
                 var participation = new Participation
                 {
                     UsagerId = usagerId,
@@ -119,14 +149,13 @@ namespace TP3_BD
                 _db.Participations.Add(participation);
                 _db.SaveChanges();
 
-                MessageBox.Show("Inscription réussie ✅");
-
+                MessageBox.Show("Inscription réussie");
                 ChargerGrille();
                 ViderChamps();
             }
             catch (DbUpdateException dbEx)
             {
-                MessageBox.Show("Erreur BD (Inscrire) :\n\n" + dbEx.Message);
+                MessageBox.Show("Erreur BD (Inscrire) :\n\n" + (dbEx.InnerException?.Message ?? dbEx.Message));
             }
             catch (Exception ex)
             {
@@ -151,7 +180,7 @@ namespace TP3_BD
         {
             try
             {
-                if (!int.TryParse(txtIdParticipationRetirer.Text.Trim(), out int id))
+                if (!int.TryParse(txtIdParticipationRetirer.Text.Trim(), out int id) || id <= 0)
                 {
                     MessageBox.Show("IdParticipation invalide.");
                     return;
@@ -176,14 +205,13 @@ namespace TP3_BD
                 _db.Participations.Remove(participation);
                 _db.SaveChanges();
 
-                MessageBox.Show("Participation retirée ✅");
-
+                MessageBox.Show("Participation retirée");
                 ChargerGrille();
                 ViderChamps();
             }
             catch (DbUpdateException dbEx)
             {
-                MessageBox.Show("Erreur BD (Retirer) :\n\n" + dbEx.Message);
+                MessageBox.Show("Erreur BD (Retirer) :\n\n" + (dbEx.InnerException?.Message ?? dbEx.Message));
             }
             catch (Exception ex)
             {
@@ -208,15 +236,23 @@ namespace TP3_BD
         }
 
         // =========================
-        // RECHERCHER par IdParticipation
+        // RECHERCHER par IdParticipation (avec erreurs)
         // =========================
         private void btnRechercher_Click(object sender, EventArgs e)
         {
             try
             {
-                if (!int.TryParse(txtListeIdParticipation.Text.Trim(), out int id))
+                string txt = txtListeIdParticipation.Text.Trim();
+
+                if (string.IsNullOrWhiteSpace(txt))
                 {
-                    MessageBox.Show("Entre un IdParticipation valide.");
+                    MessageBox.Show("Entre un IdParticipation.");
+                    return;
+                }
+
+                if (!int.TryParse(txt, out int id) || id <= 0)
+                {
+                    MessageBox.Show("IdParticipation invalide (nombre positif).");
                     return;
                 }
 
@@ -224,10 +260,23 @@ namespace TP3_BD
                     .Include(p => p.Usager)
                     .Include(p => p.Activite)
                     .Where(p => p.ParticipationId == id)
+                    .Select(p => new
+                    {
+                        p.ParticipationId,
+                        p.ActiviteId,
+                        Activite = p.Activite != null ? p.Activite.Titre : "",
+                        p.UsagerId,
+                        Usager = p.Usager != null ? (p.Usager.Nom + " " + p.Usager.Prenom).Trim() : "",
+                        p.Presence,
+                        p.DateInscription
+                    })
                     .ToList();
 
                 dgvParticipation.DataSource = null;
                 dgvParticipation.DataSource = data;
+
+                if (data.Count == 0)
+                    MessageBox.Show("Aucune participation trouvée avec cet Id.");
             }
             catch (Exception ex)
             {
@@ -236,7 +285,7 @@ namespace TP3_BD
         }
 
         // =========================
-        // CLIQUE GRILLE -> remplir champs
+        // CLIQUE GRILLE -> remplir champs (IMPORTANT: lecture par colonnes)
         // =========================
         private void dgvParticipation_CellClick(object? sender, DataGridViewCellEventArgs e)
         {
@@ -244,21 +293,27 @@ namespace TP3_BD
             {
                 if (e.RowIndex < 0) return;
 
-                if (dgvParticipation.Rows[e.RowIndex].DataBoundItem is Participation p)
-                {
-                    // Retirer
-                    txtIdParticipationRetirer.Text = p.ParticipationId.ToString();
+                var row = dgvParticipation.Rows[e.RowIndex];
+                if (row == null) return;
 
-                    // Reprendre dans le formulaire (facultatif)
-                    cmbUsager.SelectedValue = p.UsagerId;
-                    cmbActivite.SelectedValue = p.ActiviteId;
-                    dtpDateInscription.Value = p.DateInscription;
-                    chkPresence.Checked = p.Presence;
-                }
+                // Comme la grille = Select(new { ... }) => on lit par noms de colonnes
+                txtIdParticipationRetirer.Text = row.Cells["ParticipationId"].Value?.ToString() ?? "";
+
+                if (row.Cells["UsagerId"].Value != null)
+                    cmbUsager.SelectedValue = Convert.ToInt32(row.Cells["UsagerId"].Value);
+
+                if (row.Cells["ActiviteId"].Value != null)
+                    cmbActivite.SelectedValue = Convert.ToInt32(row.Cells["ActiviteId"].Value);
+
+                if (row.Cells["DateInscription"].Value != null)
+                    dtpDateInscription.Value = Convert.ToDateTime(row.Cells["DateInscription"].Value);
+
+                var presenceVal = row.Cells["Presence"].Value;
+                chkPresence.Checked = presenceVal != null && presenceVal != DBNull.Value && Convert.ToBoolean(presenceVal);
             }
             catch
             {
-                // éviter crash sur un clic
+                // éviter crash sur clic
             }
         }
 

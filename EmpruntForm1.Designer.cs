@@ -49,6 +49,7 @@
             lbIdEmpruntRetour = new Label();
             lbIdEmpruntSupp = new Label();
             txtIdEmpruntSupp = new TextBox();
+            lbStatut = new Label();
             ((System.ComponentModel.ISupportInitialize)dgvEmprunt).BeginInit();
             SuspendLayout();
             // 
@@ -141,6 +142,7 @@
             btnRetour.TabIndex = 156;
             btnRetour.Text = "Retour";
             btnRetour.UseVisualStyleBackColor = true;
+            btnRetour.Click += btnRetour_Click_1;
             // 
             // btnRetourner
             // 
@@ -196,7 +198,7 @@
             // 
             // txtEtat
             // 
-            txtEtat.Location = new Point(965, 12);
+            txtEtat.Location = new Point(1028, 13);
             txtEtat.Name = "txtEtat";
             txtEtat.ReadOnly = true;
             txtEtat.Size = new Size(100, 23);
@@ -235,11 +237,21 @@
             txtIdEmpruntSupp.Size = new Size(100, 23);
             txtIdEmpruntSupp.TabIndex = 192;
             // 
+            // lbStatut
+            // 
+            lbStatut.AutoSize = true;
+            lbStatut.Location = new Point(972, 16);
+            lbStatut.Name = "lbStatut";
+            lbStatut.Size = new Size(38, 15);
+            lbStatut.TabIndex = 193;
+            lbStatut.Text = "Statut";
+            // 
             // EmpruntForm1
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(1077, 517);
+            ClientSize = new Size(1242, 517);
+            Controls.Add(lbStatut);
             Controls.Add(txtIdEmpruntSupp);
             Controls.Add(lbIdEmpruntSupp);
             Controls.Add(lbIdEmpruntRetour);
@@ -291,5 +303,6 @@
         private Label lbIdEmpruntRetour;
         private Label lbIdEmpruntSupp;
         private TextBox txtIdEmpruntSupp;
+        private Label lbStatut;
     }
 }

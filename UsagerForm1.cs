@@ -17,7 +17,6 @@ namespace TP3_BD
             this.Load += UsagerForm1_Load;
         }
 
-
         private void UsagerForm1_Load(object? sender, EventArgs e)
         {
             try
@@ -25,6 +24,8 @@ namespace TP3_BD
                 ChargerComboType();
                 ChargerGrille();
                 ViderChamps();
+
+                dgvUsager.CellClick += dgvUsager_CellClick;
             }
             catch (Exception ex)
             {
@@ -33,17 +34,17 @@ namespace TP3_BD
         }
 
         // ----------------------------
-        // ✅ Chargements
+        // Chargements
         // ----------------------------
         private void ChargerComboType()
         {
-            // Tu peux remplacer les valeurs selon ton projet
             cmbtypeUsager.Items.Clear();
             cmbtypeUsager.Items.Add("Étudiant");
             cmbtypeUsager.Items.Add("Employé");
             cmbtypeUsager.Items.Add("Externe");
 
-            if (cmbtypeUsager.Items.Count > 0) cmbtypeUsager.SelectedIndex = 0;
+            if (cmbtypeUsager.Items.Count > 0)
+                cmbtypeUsager.SelectedIndex = 0;
         }
 
         private void ChargerGrille()
@@ -63,7 +64,7 @@ namespace TP3_BD
         }
 
         // ----------------------------
-        // ✅ Ajouter
+        // Ajouter
         // ----------------------------
         private void btnAjouter_Click(object sender, EventArgs e)
         {
@@ -86,11 +87,11 @@ namespace TP3_BD
 
                 ChargerGrille();
                 ViderChamps();
-                MessageBox.Show("Usager ajouté ✅");
+                MessageBox.Show("Usager ajouté");
             }
             catch (DbUpdateException ex)
             {
-                MessageBox.Show("Erreur BD (ajout) : " + ex.InnerException?.Message ?? ex.Message);
+                MessageBox.Show("Erreur BD (ajout) : " + (ex.InnerException?.Message ?? ex.Message));
             }
             catch (Exception ex)
             {
@@ -99,7 +100,7 @@ namespace TP3_BD
         }
 
         // ----------------------------
-        // ✅ Modifier
+        // Modifier
         // ----------------------------
         private void btnModifier_Click(object sender, EventArgs e)
         {
@@ -131,11 +132,11 @@ namespace TP3_BD
 
                 ChargerGrille();
                 ViderChamps();
-                MessageBox.Show("Usager modifié ✅");
+                MessageBox.Show("Usager modifié");
             }
             catch (DbUpdateException ex)
             {
-                MessageBox.Show("Erreur BD (modif) : " + ex.InnerException?.Message ?? ex.Message);
+                MessageBox.Show("Erreur BD (modif) : " + (ex.InnerException?.Message ?? ex.Message));
             }
             catch (Exception ex)
             {
@@ -144,7 +145,7 @@ namespace TP3_BD
         }
 
         // ----------------------------
-        // ✅ Supprimer (INTERDIT si emprunts)
+        // Supprimer
         // ----------------------------
         private void btnSupprimer_Click(object sender, EventArgs e)
         {
@@ -156,7 +157,6 @@ namespace TP3_BD
                     return;
                 }
 
-                // ✅ Règle : on ne supprime pas un usager qui a un emprunt
                 bool aDesEmprunts = _db.Emprunts.Any(em => em.UsagerId == id);
                 if (aDesEmprunts)
                 {
@@ -171,8 +171,12 @@ namespace TP3_BD
                     return;
                 }
 
-                var confirm = MessageBox.Show("Confirmer suppression ?", "Suppression",
-                    MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+                var confirm = MessageBox.Show(
+                    "Confirmer suppression ?",
+                    "Suppression",
+                    MessageBoxButtons.YesNo,
+                    MessageBoxIcon.Warning
+                );
 
                 if (confirm != DialogResult.Yes) return;
 
@@ -181,11 +185,7 @@ namespace TP3_BD
 
                 ChargerGrille();
                 ViderChamps();
-                MessageBox.Show("Usager supprimé ✅");
-            }
-            catch (DbUpdateException ex)
-            {
-                MessageBox.Show("Erreur BD (suppression) : " + ex.InnerException?.Message ?? ex.Message);
+                MessageBox.Show("Usager supprimé");
             }
             catch (Exception ex)
             {
@@ -194,7 +194,7 @@ namespace TP3_BD
         }
 
         // ----------------------------
-        // ✅ Rechercher par IdUsager
+        // Rechercher
         // ----------------------------
         private void btnRechercher_Click(object sender, EventArgs e)
         {
@@ -220,7 +220,7 @@ namespace TP3_BD
         }
 
         // ----------------------------
-        // ✅ Actualiser + Vider
+        // Actualiser + Vider
         // ----------------------------
         private void btnActualiser_Click(object sender, EventArgs e)
         {
@@ -232,41 +232,31 @@ namespace TP3_BD
 
         private void ViderChamps()
         {
-            // Ajout
             txtNomUsager.Clear();
             txtPrenomUsager.Clear();
             txtTelephone.Clear();
 
-            // Modif
             txtIdUsager.Clear();
             txtNomUsagerModif.Clear();
             txtPrenomUsagerModif.Clear();
             txtTelephoneModif.Clear();
 
-            // Supp
             txtIdUsagerSupp.Clear();
-
-            // Recherche
             txtListeIdUsager.Clear();
 
-            // Checkboxes
             chkActif.Checked = true;
             chkInactif.Checked = false;
 
-            // Combo
-            if (cmbtypeUsager.Items.Count > 0) cmbtypeUsager.SelectedIndex = 0;
+            if (cmbtypeUsager.Items.Count > 0)
+                cmbtypeUsager.SelectedIndex = 0;
         }
 
-        // ----------------------------
-        // ✅ Cliquer une ligne -> remplir champs modif/supp
-        // ----------------------------
         private void dgvUsager_CellClick(object? sender, DataGridViewCellEventArgs e)
         {
             if (e.RowIndex < 0) return;
 
             if (dgvUsager.Rows[e.RowIndex].DataBoundItem is Usager u)
             {
-                // Modif
                 txtIdUsager.Text = u.UsagerId.ToString();
                 txtNomUsagerModif.Text = u.Nom;
                 txtPrenomUsagerModif.Text = u.Prenom;
@@ -276,14 +266,18 @@ namespace TP3_BD
                 chkActif.Checked = u.Actif;
                 chkInactif.Checked = !u.Actif;
 
-                // Supp
                 txtIdUsagerSupp.Text = u.UsagerId.ToString();
             }
         }
 
         // ----------------------------
-        // ✅ Validations
+        // Validation du téléphone : 10 chiffres EXACTEMENT
         // ----------------------------
+        private bool TelephoneValide(string tel)
+        {
+            return tel.All(char.IsDigit) && tel.Length == 10;
+        }
+
         private bool ValiderAjout(out string nom, out string prenom, out string tel, out string type, out bool actif)
         {
             nom = txtNomUsager.Text.Trim();
@@ -297,28 +291,37 @@ namespace TP3_BD
                 MessageBox.Show("Nom obligatoire.");
                 return false;
             }
+
             if (string.IsNullOrWhiteSpace(prenom))
             {
                 MessageBox.Show("Prénom obligatoire.");
                 return false;
             }
+
             if (string.IsNullOrWhiteSpace(tel))
             {
                 MessageBox.Show("Téléphone obligatoire.");
                 return false;
             }
-            if (chkActif.Checked && chkInactif.Checked)
+
+            if (!TelephoneValide(tel))
             {
-                MessageBox.Show("Choisis Actif OU Inactif (pas les deux).");
+                MessageBox.Show("Téléphone invalide : tu dois entrer EXACTEMENT 10 chiffres.");
                 return false;
             }
+
+            if (chkActif.Checked && chkInactif.Checked)
+            {
+                MessageBox.Show("Choisis Actif OU Inactif.");
+                return false;
+            }
+
             if (!chkActif.Checked && !chkInactif.Checked)
             {
                 MessageBox.Show("Choisis Actif ou Inactif.");
                 return false;
             }
 
-            // Si Inactif, actif = false
             if (chkInactif.Checked) actif = false;
 
             return true;
@@ -337,21 +340,31 @@ namespace TP3_BD
                 MessageBox.Show("Nom obligatoire (modification).");
                 return false;
             }
+
             if (string.IsNullOrWhiteSpace(prenom))
             {
                 MessageBox.Show("Prénom obligatoire (modification).");
                 return false;
             }
+
             if (string.IsNullOrWhiteSpace(tel))
             {
                 MessageBox.Show("Téléphone obligatoire (modification).");
                 return false;
             }
-            if (chkActif.Checked && chkInactif.Checked)
+
+            if (!TelephoneValide(tel))
             {
-                MessageBox.Show("Choisis Actif OU Inactif (pas les deux).");
+                MessageBox.Show("Téléphone invalide : 10 chiffres requis.");
                 return false;
             }
+
+            if (chkActif.Checked && chkInactif.Checked)
+            {
+                MessageBox.Show("Choisis Actif OU Inactif.");
+                return false;
+            }
+
             if (!chkActif.Checked && !chkInactif.Checked)
             {
                 MessageBox.Show("Choisis Actif ou Inactif.");
@@ -362,10 +375,9 @@ namespace TP3_BD
             return true;
         }
 
-        // ----------------------------
-        // ✅ Events inutiles (mais on les garde pour éviter erreur Designer)
-        // ----------------------------
-        private void txtPrenomUsager_TextChanged(object sender, EventArgs e) { }
-        private void txtTelephone_TextChanged(object sender, EventArgs e) { }
+        private void btnRetour_Click(object sender, EventArgs e)
+        {
+            this.Close();
+        }
     }
 }

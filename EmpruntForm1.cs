@@ -1,4 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using System;
+using System.Linq;
+using System.Windows.Forms;
 using TP3_BD.Data;
 using TP3_BD.Entities;
 
@@ -14,7 +17,6 @@ namespace TP3_BD
             this.Load += EmpruntForm1_Load;
         }
 
-
         private void EmpruntForm1_Load(object? sender, EventArgs e)
         {
             try
@@ -22,6 +24,10 @@ namespace TP3_BD
                 ChargerCombos();
                 ChargerGrille();
                 ViderChamps();
+
+                // Important : si pas branché dans Designer
+                dgvEmprunt.CellClick -= dgvEmprunt_CellClick;
+                dgvEmprunt.CellClick += dgvEmprunt_CellClick;
             }
             catch (Exception ex)
             {
@@ -30,38 +36,69 @@ namespace TP3_BD
         }
 
         // =========================
-        // CHARGEMENTS
+        // CHARGER COMBOS
         // =========================
         private void ChargerCombos()
         {
-            // Combo Usager
-            cmbUsager.DisplayMember = "Nom";      // adapte si ton Usager a Nom/Prenom
-            cmbUsager.ValueMember = "UsagerId";
-            cmbUsager.DataSource = _db.Usagers
+            // ✅ Usager : afficher Nom + Prenom
+            var usagers = _db.Usagers
                 .OrderBy(u => u.Nom)
+                .ThenBy(u => u.Prenom)
+                .Select(u => new
+                {
+                    u.UsagerId,
+                    NomComplet = (u.Nom + " " + u.Prenom).Trim()
+                })
                 .ToList();
 
-            // Combo Livre (on affiche le titre)
+            cmbUsager.DataSource = usagers;
+            cmbUsager.DisplayMember = "NomComplet";
+            cmbUsager.ValueMember = "UsagerId";
+
+            // ✅ Livre : afficher Titre
+            var livres = _db.Livres
+                .OrderBy(l => l.Titre)
+                .Select(l => new
+                {
+                    l.LivreId,
+                    l.Titre
+                })
+                .ToList();
+
+            cmbLivre.DataSource = livres;
             cmbLivre.DisplayMember = "Titre";
             cmbLivre.ValueMember = "LivreId";
-            cmbLivre.DataSource = _db.Livres
-                .OrderBy(l => l.Titre)
-                .ToList();
         }
 
+        // =========================
+        // CHARGER GRILLE (avec noms lisibles)
+        // =========================
         private void ChargerGrille()
         {
             dgvEmprunt.DataSource = null;
 
-            dgvEmprunt.DataSource = _db.Emprunts
+            var data = _db.Emprunts
                 .Include(e => e.Usager)
                 .Include(e => e.Livre)
                 .OrderByDescending(e => e.DateEmprunt)
+                .Select(e => new
+                {
+                    e.EmpruntId,
+                    e.LivreId,
+                    Livre = e.Livre != null ? e.Livre.Titre : "",
+                    e.UsagerId,
+                    Usager = e.Usager != null ? (e.Usager.Nom + " " + e.Usager.Prenom).Trim() : "",
+                    e.DateEmprunt,
+                    e.DateRetourPrevue,
+                    DateRetour = e.DateRetour,
+                    Etat = e.DateRetour == null ? "EnCours" : "Retourné"
+                })
                 .ToList();
 
+            dgvEmprunt.DataSource = data;
             dgvEmprunt.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
-            dgvEmprunt.ReadOnly = true;
             dgvEmprunt.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+            dgvEmprunt.ReadOnly = true;
             dgvEmprunt.MultiSelect = false;
         }
 
@@ -72,15 +109,14 @@ namespace TP3_BD
         {
             try
             {
-                // 1) Validations de base
                 if (cmbUsager.SelectedValue == null || cmbLivre.SelectedValue == null)
                 {
                     MessageBox.Show("Choisis un usager et un livre.");
                     return;
                 }
 
-                int usagerId = (int)cmbUsager.SelectedValue;
-                int livreId = (int)cmbLivre.SelectedValue;
+                int usagerId = Convert.ToInt32(cmbUsager.SelectedValue);
+                int livreId = Convert.ToInt32(cmbLivre.SelectedValue);
 
                 DateTime dateEmprunt = dtpDateEmprunt.Value.Date;
                 DateTime dateRetourPrevue = dtpRetourPrevu.Value.Date;
@@ -91,7 +127,7 @@ namespace TP3_BD
                     return;
                 }
 
-                // 2) Vérifier la quantité du livre
+                // Vérifier disponibilité du livre
                 var livre = _db.Livres.FirstOrDefault(l => l.LivreId == livreId);
                 if (livre == null)
                 {
@@ -105,31 +141,29 @@ namespace TP3_BD
                     return;
                 }
 
-                // 3) Créer l'emprunt
                 var emprunt = new Emprunt
                 {
                     UsagerId = usagerId,
                     LivreId = livreId,
                     DateEmprunt = dateEmprunt,
                     DateRetourPrevue = dateRetourPrevue,
-                    DateRetour = null // pas retourné
+                    DateRetour = null
                 };
 
-                // 4) Diminuer quantité
+                // Diminuer quantité
                 livre.Quantite -= 1;
 
-                // 5) Sauvegarde
                 _db.Emprunts.Add(emprunt);
                 _db.SaveChanges();
 
-                MessageBox.Show("Emprunt ajouté ✅");
+                MessageBox.Show("Emprunt ajouté");
                 ChargerGrille();
-                ChargerCombos(); // pour rafraîchir si tu filtres des livres dispo plus tard
+                ChargerCombos();
                 ViderChamps();
             }
-            catch (DbUpdateException dbEx)
+            catch (DbUpdateException ex)
             {
-                MessageBox.Show("Erreur base de données :\n\n" + dbEx.Message);
+                MessageBox.Show("Erreur BD (ajout) : " + (ex.InnerException?.Message ?? ex.Message));
             }
             catch (Exception ex)
             {
@@ -166,16 +200,22 @@ namespace TP3_BD
                     return;
                 }
 
-                // Retour
-                emprunt.DateRetour = dtpDateRetourReel.Value.Date;
+                DateTime dateRetourReel = dtpDateRetourReel.Value.Date;
 
-                // Remettre le livre disponible
+                if (dateRetourReel < emprunt.DateEmprunt.Date)
+                {
+                    MessageBox.Show("La date de retour ne peut pas être avant la date d'emprunt.");
+                    return;
+                }
+
+                emprunt.DateRetour = dateRetourReel;
+
                 if (emprunt.Livre != null)
                     emprunt.Livre.Quantite += 1;
 
                 _db.SaveChanges();
 
-                MessageBox.Show("Livre retourné ✅");
+                MessageBox.Show("Livre retourné");
                 ChargerGrille();
                 ChargerCombos();
                 ViderChamps();
@@ -209,16 +249,14 @@ namespace TP3_BD
                     return;
                 }
 
-                // Si emprunt pas retourné, on remet la quantité du livre avant suppression
+                // Si pas retourné, on remet la quantité avant suppression
                 if (emprunt.DateRetour == null && emprunt.Livre != null)
-                {
                     emprunt.Livre.Quantite += 1;
-                }
 
                 _db.Emprunts.Remove(emprunt);
                 _db.SaveChanges();
 
-                MessageBox.Show("Emprunt supprimé ✅");
+                MessageBox.Show("Emprunt supprimé");
                 ChargerGrille();
                 ChargerCombos();
                 ViderChamps();
@@ -226,6 +264,53 @@ namespace TP3_BD
             catch (Exception ex)
             {
                 MessageBox.Show("Erreur suppression :\n\n" + ex.Message);
+            }
+        }
+
+        // =========================
+        // RECHERCHER
+        // =========================
+        private void btnRechercher_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                if (!int.TryParse(txtListeIdEmprunt.Text.Trim(), out int id))
+                {
+                    MessageBox.Show("Entre un IdEmprunt valide.");
+                    return;
+                }
+
+                var data = _db.Emprunts
+                    .Include(e => e.Usager)
+                    .Include(e => e.Livre)
+                    .Where(e => e.EmpruntId == id)
+                    .Select(e => new
+                    {
+                        e.EmpruntId,
+                        e.LivreId,
+                        Livre = e.Livre != null ? e.Livre.Titre : "",
+                        e.UsagerId,
+                        Usager = e.Usager != null ? (e.Usager.Nom + " " + e.Usager.Prenom).Trim() : "",
+                        e.DateEmprunt,
+                        e.DateRetourPrevue,
+                        DateRetour = e.DateRetour,
+                        Etat = e.DateRetour == null ? "EnCours" : "Retourné"
+                    })
+                    .ToList();
+
+                if (data.Count == 0)
+                {
+                    MessageBox.Show("Aucun emprunt trouvé avec cet IdEmprunt.");
+                    dgvEmprunt.DataSource = null;
+                    return;
+                }
+
+                dgvEmprunt.DataSource = null;
+                dgvEmprunt.DataSource = data;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Erreur recherche :\n\n" + ex.Message);
             }
         }
 
@@ -246,62 +331,44 @@ namespace TP3_BD
         }
 
         // =========================
-        // RECHERCHER par IdEmprunt
+        // CLICK GRILLE -> remplir
         // =========================
-        private void btnRechercher_Click(object sender, EventArgs e)
-        {
-            try
-            {
-                if (!int.TryParse(txtListeIdEmprunt.Text.Trim(), out int id))
-                {
-                    MessageBox.Show("Entre un IdEmprunt valide.");
-                    return;
-                }
-
-                var data = _db.Emprunts
-                    .Include(e => e.Usager)
-                    .Include(e => e.Livre)
-                    .Where(e => e.EmpruntId == id)
-                    .ToList();
-
-                dgvEmprunt.DataSource = null;
-                dgvEmprunt.DataSource = data;
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("Erreur recherche :\n\n" + ex.Message);
-            }
-        }
-
-        // =========================
-        // CLICK GRILLE -> remplit
-        // =========================
-        private void dgvEmprunts_CellClick(object? sender, DataGridViewCellEventArgs e)
+        private void dgvEmprunt_CellClick(object? sender, DataGridViewCellEventArgs e)
         {
             try
             {
                 if (e.RowIndex < 0) return;
 
-                if (dgvEmprunt.Rows[e.RowIndex].DataBoundItem is Emprunt emp)
-                {
-                    // Remplir les zones Id pour Retour/Supp
-                    txtIdEmpruntRetour.Text = emp.EmpruntId.ToString();
-                    txtIdEmpruntSupp.Text = emp.EmpruntId.ToString();
+                var row = dgvEmprunt.Rows[e.RowIndex];
+                if (row == null) return;
 
-                    // Remplir les combos + dates
-                    cmbUsager.SelectedValue = emp.UsagerId;
-                    cmbLivre.SelectedValue = emp.LivreId;
+                // On lit par nom de colonnes (comme on projette un new {})
+                txtIdEmpruntRetour.Text = row.Cells["EmpruntId"].Value?.ToString();
+                txtIdEmpruntSupp.Text = row.Cells["EmpruntId"].Value?.ToString();
 
-                    dtpDateEmprunt.Value = emp.DateEmprunt;
-                    dtpRetourPrevu.Value = emp.DateRetourPrevue;
+                // Remettre les combos via Id
+                if (row.Cells["UsagerId"].Value != null)
+                    cmbUsager.SelectedValue = Convert.ToInt32(row.Cells["UsagerId"].Value);
 
-                    // Si pas retourné -> on met aujourd'hui par défaut
-                    dtpDateRetourReel.Value = emp.DateRetour ?? DateTime.Today;
-                }
+                if (row.Cells["LivreId"].Value != null)
+                    cmbLivre.SelectedValue = Convert.ToInt32(row.Cells["LivreId"].Value);
+
+                // Dates
+                if (row.Cells["DateEmprunt"].Value != null)
+                    dtpDateEmprunt.Value = Convert.ToDateTime(row.Cells["DateEmprunt"].Value);
+
+                if (row.Cells["DateRetourPrevue"].Value != null)
+                    dtpRetourPrevu.Value = Convert.ToDateTime(row.Cells["DateRetourPrevue"].Value);
+
+                // DateRetour (si null -> Today)
+                var valRetour = row.Cells["DateRetour"].Value;
+                dtpDateRetourReel.Value = (valRetour == null || valRetour == DBNull.Value)
+                    ? DateTime.Today
+                    : Convert.ToDateTime(valRetour);
             }
             catch
             {
-                // On évite de casser l'app juste pour un clic
+                // ne crash pas sur un clic
             }
         }
 
@@ -323,9 +390,10 @@ namespace TP3_BD
         }
 
         // =========================
-        // RETOUR FORM
+        // RETOUR
         // =========================
-        private void btnRetour_Click(object sender, EventArgs e)
+
+        private void btnRetour_Click_1(object sender, EventArgs e)
         {
             this.Close();
         }

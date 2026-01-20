@@ -21,6 +21,11 @@ namespace TP3_BD
                 RemplirRoles();
                 SeedRolesSiVide();
                 ChargerGrille();
+                ViderChamps();
+
+                // IMPORTANT : brancher le click (si pas fait dans le designer)
+                dgvEmployes.CellClick -= dgvEmployes_CellClick;
+                dgvEmployes.CellClick += dgvEmployes_CellClick;
             }
             catch (Exception ex)
             {
@@ -34,19 +39,17 @@ namespace TP3_BD
         // -------------------------
         private void RemplirRoles()
         {
-            // Tu peux ajuster la liste selon ton projet
             var roles = new List<string> { "Admin", "Bibliothécaire", "Employé", "Gestionnaire" };
 
             cmbRole.DataSource = roles.ToList();
 
-            // si tu as un combo pour la partie modifier
+            // combo pour modifier
             if (cmbRoleModif != null)
                 cmbRoleModif.DataSource = roles.ToList();
         }
 
         private void SeedRolesSiVide()
         {
-            // Facultatif : créer 2 employés si ta table est vide
             if (!_db.Employes.Any())
             {
                 _db.Employes.AddRange(
@@ -69,6 +72,45 @@ namespace TP3_BD
                 .ToList();
 
             dgvEmployes.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
+            dgvEmployes.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+            dgvEmployes.ReadOnly = true;
+            dgvEmployes.MultiSelect = false;
+        }
+
+        // -------------------------
+        // CLICK GRILLE -> remplir Modifier + Supprimer
+        // -------------------------
+        private void dgvEmployes_CellClick(object? sender, DataGridViewCellEventArgs e)
+        {
+            try
+            {
+                if (e.RowIndex < 0) return;
+
+                // Comme dans Usager : DataBoundItem est un Employe
+                if (dgvEmployes.Rows[e.RowIndex].DataBoundItem is Employe emp)
+                {
+                    // MODIFIER
+                    txtIdEmploye.Text = emp.EmployeId.ToString();
+                    txtNomEmployeModif.Text = emp.Nom;
+                    txtPrenomEmployeModif.Text = emp.Prenom;
+
+                    // Role modif
+                    if (cmbRoleModif != null)
+                    {
+                        // si le role existe dans la liste, on le sélectionne
+                        cmbRoleModif.SelectedItem = emp.Role;
+                        // au cas où SelectedItem ne marche pas (différences de chaines)
+                        cmbRoleModif.Text = emp.Role;
+                    }
+
+                    // SUPPRIMER
+                    txtIdEmployeSupp.Text = emp.EmployeId.ToString();
+                }
+            }
+            catch
+            {
+                
+            }
         }
 
         // -------------------------
@@ -108,7 +150,7 @@ namespace TP3_BD
                 _db.Employes.Add(emp);
                 _db.SaveChanges();
 
-                MessageBox.Show("Employé ajouté ✅", "Succès", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                MessageBox.Show("Employé ajouté", "Succès", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 ChargerGrille();
                 ViderChamps();
             }
@@ -141,7 +183,7 @@ namespace TP3_BD
 
                 var nom = txtNomEmployeModif.Text.Trim();
                 var prenom = txtPrenomEmployeModif.Text.Trim();
-                var role = cmbRoleModif.SelectedItem?.ToString() ?? "";
+                var role = cmbRoleModif.SelectedItem?.ToString() ?? cmbRoleModif.Text.Trim();
 
                 if (string.IsNullOrWhiteSpace(nom) || string.IsNullOrWhiteSpace(prenom) || string.IsNullOrWhiteSpace(role))
                 {
@@ -155,7 +197,7 @@ namespace TP3_BD
 
                 _db.SaveChanges();
 
-                MessageBox.Show("Employé modifié ✅", "Succès", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                MessageBox.Show("Employé modifié", "Succès", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 ChargerGrille();
                 ViderChamps();
             }
@@ -194,7 +236,7 @@ namespace TP3_BD
                 _db.Employes.Remove(emp);
                 _db.SaveChanges();
 
-                MessageBox.Show("Employé supprimé ✅", "Succès", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                MessageBox.Show("Employé supprimé", "Succès", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 ChargerGrille();
                 ViderChamps();
             }
@@ -224,7 +266,7 @@ namespace TP3_BD
                 dgvEmployes.DataSource = data;
 
                 if (data.Count == 0)
-                    MessageBox.Show("Aucun résultat.", "Info", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    MessageBox.Show("Aucun employe trouvé avec cet Id.", "Info", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             catch (Exception ex)
             {
