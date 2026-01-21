@@ -94,5 +94,13 @@ namespace TP3_BD
             form.ShowDialog();
             this.Show();
         }
+
+        private void btnRapports_Click(object sender, EventArgs e)
+        {
+            RapportsForm1 form = new RapportsForm1();
+            this.Hide();
+            form.ShowDialog();
+            this.Show();
+        }
     }
 }

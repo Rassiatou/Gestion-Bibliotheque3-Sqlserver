@@ -39,6 +39,7 @@
             btnEmpruntMatériel = new Button();
             btnEmployé = new Button();
             btnÉvaluation = new Button();
+            btnRapports = new Button();
             SuspendLayout();
             // 
             // btnLivre
@@ -151,11 +152,22 @@
             btnÉvaluation.UseVisualStyleBackColor = true;
             btnÉvaluation.Click += btnÉvaluation_Click;
             // 
+            // btnRapports
+            // 
+            btnRapports.Location = new Point(349, 225);
+            btnRapports.Name = "btnRapports";
+            btnRapports.Size = new Size(75, 23);
+            btnRapports.TabIndex = 11;
+            btnRapports.Text = "Rapports";
+            btnRapports.UseVisualStyleBackColor = true;
+            btnRapports.Click += btnRapports_Click;
+            // 
             // MenuForm
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(800, 450);
+            Controls.Add(btnRapports);
             Controls.Add(btnÉvaluation);
             Controls.Add(btnEmployé);
             Controls.Add(btnEmpruntMatériel);
@@ -185,5 +197,6 @@
         private Button btnEmpruntMatériel;
         private Button btnEmployé;
         private Button btnÉvaluation;
+        private Button btnRapports;
     }
 }
